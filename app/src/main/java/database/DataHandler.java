@@ -4,14 +4,10 @@ package database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.provider.ContactsContract;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -71,7 +67,6 @@ public class DataHandler extends SQLiteOpenHelper {
                 contentValues.put("lat", aStop.getStop_Lat());
                 contentValues.put("lon", aStop.getStop_Lon());
                 contentValues.put("stop_name", aStop.getStop_Name());
-                contentValues.put("parent_stop", aStop.getParent_Stop());
                 db.insert("stop", null, contentValues);
                 Log.w("myApp", "-----------------DB - Stop--------------" + i);
                 i++;

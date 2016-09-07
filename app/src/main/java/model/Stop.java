@@ -8,16 +8,12 @@ public class Stop {
     private String stop_Name;
     private double stop_Lat;
     private double stop_Lon;
-    private int stop_Location_Type;
-    private int parent_Stop;
 
-    public Stop(int stop_Id, String stop_Name, double stop_Lat, double stop_Lon, int stop_Location_Type, int parent_Stop) {
+    public Stop(int stop_Id, String stop_Name, double stop_Lat, double stop_Lon) {
         this.stop_Id = stop_Id;
         this.stop_Name = stop_Name;
         this.stop_Lat = stop_Lat;
         this.stop_Lon = stop_Lon;
-        this.stop_Location_Type = stop_Location_Type;
-        this.parent_Stop = parent_Stop;
     }
 
     public int getStop_Id() {
@@ -52,19 +48,4 @@ public class Stop {
         this.stop_Lon = stop_Lon;
     }
 
-    public int getStop_Location_Type() {
-        return stop_Location_Type;
-    }
-
-    public void setStop_Location_Type(int stop_Location_Type) {
-        this.stop_Location_Type = stop_Location_Type;
-    }
-
-    public int getParent_Stop() {
-        return parent_Stop;
-    }
-
-    public void setParent_Stop(int parent_Stop) {
-        this.parent_Stop = parent_Stop;
-    }
 }

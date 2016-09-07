@@ -3,14 +3,14 @@ package model;
 /**
  * Created by James on 6/08/2016.
  */
-public class TripStop {
-    private Trip trip;
-    private Stop stop;
-    private String arrival_Time;
-    private String depart_Time;
+public class TripStop implements Comparable{
+    private String trip;
+    private int stop;
+    private int arrival_Time;
+    private int depart_Time;
     private int stop_Sequence;
 
-    public TripStop(Trip trip, Stop stop, String arrival_Time, String depart_Time, int stop_Sequence) {
+    public TripStop(String trip, int stop, int arrival_Time, int depart_Time, int stop_Sequence) {
         this.trip = trip;
         this.stop = stop;
         this.arrival_Time = arrival_Time;
@@ -18,35 +18,35 @@ public class TripStop {
         this.stop_Sequence = stop_Sequence;
     }
 
-    public Trip getTrip() {
+    public String getTrip() {
         return trip;
     }
 
-    public void setTrip(Trip trip) {
+    public void setTrip(String trip) {
         this.trip = trip;
     }
 
-    public Stop getStop() {
+    public int getStop() {
         return stop;
     }
 
-    public void setStop(Stop stop) {
+    public void setStop(int stop) {
         this.stop = stop;
     }
 
-    public String getArrival_Time() {
+    public int getArrival_Time() {
         return arrival_Time;
     }
 
-    public void setArrival_Time(String arrival_Time) {
+    public void setArrival_Time(int arrival_Time) {
         this.arrival_Time = arrival_Time;
     }
 
-    public String getDepart_Time() {
+    public int getDepart_Time() {
         return depart_Time;
     }
 
-    public void setDepart_Time(String depart_Time) {
+    public void setDepart_Time(int depart_Time) {
         this.depart_Time = depart_Time;
     }
 
@@ -57,4 +57,11 @@ public class TripStop {
     public void setStop_Sequence(int stop_Sequence) {
         this.stop_Sequence = stop_Sequence;
     }
+
+    @Override
+    public int compareTo(Object t) {
+        int compareTime = ((TripStop)t).getArrival_Time();
+        return this.arrival_Time - compareTime;
+    }
+
 }

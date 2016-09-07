@@ -1,61 +1,64 @@
 package com.example.james.buz4;
 
-import android.content.Context;
-import android.content.DialogInterface;
+/**
+ * Created by Taehyun Kim on 09/08/2016.
+ */
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
 import android.util.Log;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-/**
- * Created by Taehyun Kim on 09/08/2016.
- */
-public class LoadingActivity extends FragmentActivity implements OnMapReadyCallback {
-//public abstract class LoadingActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks {
-//public abstract class LoadingActivity extends FragmentActivity implements OnMapReadyCallback, LocationManagerInterface {
-//public abstract class LoadingActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, OnMarkerClickListener {
-//public class LoadingActivity extends AppCompatActivity {
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+
+import model.Stop;
+
+public class LoadingActivity extends FragmentActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        GoogleMap.OnInfoWindowClickListener,
+        GoogleMap.OnCameraChangeListener {
+
+    protected double curLat, curLog;
+    int sDistance = 300;
+    public static final String TAG = "LoadingActivity";
 
     private GoogleMap mMap;
-    private GoogleApiClient client;
-    private Location location;
-    private Location uCurLocation;
-    private LocationManager locManager;
-    private LocationListener locListener;
-    public static final String TAG = LoadingActivity.class.getSimpleName();
-
-    Intent intentThatCalled;
-    public double latitude;
-    public double longitude;
-    public LocationManager locationManager;
-    public Criteria criteria;
-    public String bestProvider;
-
-    //MapLocationManager mLocationManager;
-    TextView mLocalTV, mLocationProviderTV, mlocationTimeTV;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    private Location mLastLocation;
+    public LocationManager mLocationManager;
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,316 +70,240 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
         //To get map object
         mapFragment.getMapAsync(this);
 
-
-        intentThatCalled = getIntent();
-        String voice2text = intentThatCalled.getStringExtra("v2txt");
-        getLocation(voice2text);
-/*
-        Thread welcomeThread = new Thread() {
-
-            @Override
-            public void run() {
-                try {
-                    super.run();
-                    sleep(5000);  //Delay of 10 seconds
-                } catch (Exception e) {
-                } finally {
-                    Intent mainview = new Intent(LoadingActivity.this, MainActivity.class);
-                    startActivity(mainview);
-                    finish();
-                }
-            }
-        };
-        welcomeThread.start();
-*/
-
-/*
-        //to show current location in the map
-        mMap.setMyLocationEnabled(true);
-
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-
-            @Override
-            public void onMapClick(LatLng latLng) {
-
-                Toast.makeText(getApplicationContext(), latLng.toString(), Toast.LENGTH_LONG).show();
-            }
-        });
-*/
-        Log.w("LoadingActivity", "--------------onCreate)---------Log Test");
-        //To setup location manager
-//        locManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        //To request location updates
-        //locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this)
-        //locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 1, this);
-
-
-        locListener = new LocationListener() {
-            //@Override
-            public void onStatusChanged(String provider, int status,
-                                        Bundle extras) {
-                Log.w("LoadingActivity", "--------------onStatusChanged---------Log Test");
-            }
-
-            //@Override
-            public void onProviderEnabled(String provider) {
-                Log.w("LoadingActivity", "--------------onProviderEnabled---------Log Test");
-            }
-
-            //@Override
-            public void onProviderDisabled(String provider) {
-                Log.w("LoadingActivity", "--------------onProviderDisabled---------Log Test");
-            }
-
-            @Override
-            public void onLocationChanged(Location location) {
-                Log.w("LoadingActivity", "--------------onLocationChanged---------Log Test");
-                //To clear map data
-                mMap.clear();
-
-                //To hold location
-                LatLng curLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
-                //To create marker in map
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(curLocation);
-                markerOptions.title("My Location");
-                markerOptions.snippet("Find my current location.");
-                //adding marker to the map
-                mMap.addMarker(markerOptions);
-
-                //opening position with some zoom level in the map
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curLocation, 17.0f));
-                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curLocation, 17));
-            }
-        };
-
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-
-
-/*        mLocationManager = new LocationManager(getApplicationContext(), this, this, LocationManager.ALL_PROVIDERS, LocationRequest.PRIORITY_HIGH_ACCURACY, 10 * 1000, 1 * 1000, MapLocationManager.LOCATION_PROVIDER_RESTRICTION_NONE); // init location manager
-        mLocalTV = (TextView) findViewById(R.id.locationDisplayTV);
-        mLocationProviderTV = (TextView) findViewById(R.id.locationProviderTV);
-        mlocationTimeTV = (TextView) findViewById(R.id.locationTimeFetchedTV);
-*/
+        handlePermissionsAndGetLocation();
     }
-
-/*
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-*/
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        Marker testBusStop;
-
-        //setUpMap();
-
-        //mMap.setOnMarkerClickListener(this);
-
-        // Add a marker in Sydney and move the camera
-
-        LatLng autUni = new LatLng(-36.853, 174.767);
-//        LatLng testBusStop = new LatLng(-36.85266, 174.76563);
-//        String testBusStopTitle = "7038";
-//        String testBusStopDesc = "Mayoral Dr opp AUT";
-//
-        //setOnMarkerClickListener
-        //onMarkerClicked(Marker);
-
-
-        //mMap.setMyLocationEnabled(true);
-        //myLat = mMap.getMyLocation().getLatitude();
-
-        // Move to AUT
-        mMap.addMarker(new MarkerOptions()
-                .title("AUT University")
-                .snippet("The most populous university in New Zealand.")
-                .position(autUni));
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(autUni, 17));
-
-        //Toast.makeText(getApplicationContext(), autUni.toString(), Toast.LENGTH_LONG).show();
-
-        //LatLng curLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        //Log.w("LoadingActivity", "--------------onMapReady---------curLocation"+curLocation);
-        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curLocation, 17));
-/*
-        //To create marker in map
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(curLocation);
-        markerOptions.title("My Location");
-        markerOptions.snippet("Find my current location.");
-        //adding marker to the map
-        mMap.addMarker(markerOptions);
-*/
-        //opening position with some zoom level in the map
-        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curLocation, 17.0f));
-
-        //.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-
-//
-//        mMap.addMarker(new MarkerOptions()
-//                .position(new LatLng(-36.85266, 174.76563))
-//                .title("7038")
-//                .snippet("Mayoral Dr opp AUT")
-//                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-
-//        mMap.addMarker(new MarkerOptions()
-//                .title(testBusStopTitle)
-//                .snippet(testBusStopDesc)
-//                .position(testBusStop));
-//
-        //onLocationChanged(location);
-    }
-
-    public void setUpMap() {
-
-        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+        mMap.setOnCameraChangeListener(this);
+        mMap.setOnInfoWindowClickListener(this);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMap.getUiSettings().setTiltGesturesEnabled(false);
         mMap.setMyLocationEnabled(true);
-        mMap.setTrafficEnabled(true);
-        //mMap.setIndoorEnabled(true);
-        mMap.isIndoorEnabled();
-        mMap.setBuildingsEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-    }
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-    /*
-            @Override
-            public boolean onMarkerClick(Marker arg0) {
 
-                return false;
-            }*/
-/*
-    protected void onStart() {
-        super.onStart();
-        mLocationManager.startLocationFetching();
-    }
+        // Init location
+        LatLng initPoint = new LatLng(-36.8524, 174.7644); // AUT WT Building
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
+        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initPoint ,17));
 
-    protected void onStop() {
-        super.onStop();
-        mLocationManager.abortLocationFetching();
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        mLocationManager.pauseLocationFetching();
+    public void onInfoWindowClick (Marker marker) {
+        marker.showInfoWindow();
+        //Intent intent = new Intent(LoadingActivity.this, MainActivity.class); // Bus stop list
+        Intent intent = new Intent(LoadingActivity.this, RouteActivity.class); // Bus route
+        //Intent intent = new Intent(LoadingActivity.this, ArActivity.class); // AR
+        intent.putExtra("busStopNo", marker.getTitle());
+        startActivity(intent);
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Log.w(TAG, "========== buildGoogleApiClient ==========");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
     }
 
     @Override
-    public void locationFetched(Location mLocal, Location oldLocation, String time, String locationProvider) {
-        Toast.makeText(getApplication(), "Lat : " + mLocal.getLatitude() + " Lng : " + mLocal.getLongitude(), Toast.LENGTH_LONG).show();
-        mLocalTV.setText("Lat : " + mLocal.getLatitude() + " Lng : " + mLocal.getLongitude());
-        mLocationProviderTV.setText(locationProvider);
-        mlocationTimeTV.setText(time);
-    }
+    public void onConnected(Bundle bundle) {
+        Log.w(TAG, "========== onConnected ==========");
+/*        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        if (ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
 */
-    public static boolean isLocationEnabled(Context context) {
-        int locationMode = 0;
-        String locationProviders;
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            try {
-                locationMode = Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.LOCATION_MODE);
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
-            }
-            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
-        } else {
-            locationProviders = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            return !TextUtils.isEmpty(locationProviders);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    private final LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            mLastLocation = location;
+
+            curLat = location.getLatitude();
+            curLog = location.getLongitude();
+            //Log.w(TAG, "========== onLocationChanged curLat==========" + curLat);
+            //Log.w(TAG, "========== onLocationChanged curLog==========" + curLog);
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_ASK_PERMISSIONS:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getLocation();
+                } else {
+                // Permission denied, Disable the functionality that depends on this permission.
+                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
-    public void getLocation(String voice2txt) {
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        criteria = new Criteria();
-        bestProvider = String.valueOf(locationManager.getBestProvider(criteria, false)).toString();
-        Log.w("LoadingActivity", "getLocation]--------->bestProvider======="+bestProvider);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    private void handlePermissionsAndGetLocation() {
+        Log.w(TAG, "===========handlePermissionsAndGetLocation=========");
+        int hasWriteContactsPermission = checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},REQUEST_CODE_ASK_PERMISSIONS);
             return;
         }
-        Location location = locationManager.getLastKnownLocation(bestProvider);
-        Log.w("LoadingActivity", "getLocation]--------->getLastKnownLocation======="+location);
-        if (isLocationEnabled(LoadingActivity.this)) {
-            Log.e("TAG", "GPS is on");
-            latitude = location.getLatitude();
-            longitude = location.getLongitude();
-            Log.w("LoadingActivity", "getLocation]--------->latitude======="+latitude);
-            Log.w("LoadingActivity", "getLocation]--------->longitude======="+longitude);
-            LatLng curLocation = new LatLng(latitude, longitude);
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(curLocation, 17));
-            Toast.makeText(LoadingActivity.this, "latitude:" + latitude + " longitude:" + longitude, Toast.LENGTH_SHORT).show();
-            searchNearestPlace(voice2txt);
+        getLocation();//if already has permission
+    }
 
-        }else {
+    protected void getLocation() {
+        int LOCATION_REFRESH_TIME = 3000;
+        int LOCATION_REFRESH_DISTANCE = 5;
 
-            AlertDialog.Builder notifyLocationServices = new AlertDialog.Builder(LoadingActivity.this);
-            notifyLocationServices.setTitle("Switch on Location Services");
-            notifyLocationServices.setMessage("Location Services must be turned on to complete this action. Also please take note that if on a very weak network connection,  such as 'E' Mobile Data or 'Very weak Wifi-Connections' it may take even 15 mins to load. If on a very weak network connection as stated above, location returned to application may be null or nothing and cause the application to crash.");
-            notifyLocationServices.setPositiveButton("Ok, Open Settings", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent openLocationSettings = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    LoadingActivity.this.startActivity(openLocationSettings);
-                    finish();
-                }
-            });
-            notifyLocationServices.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            notifyLocationServices.show();
+        if (!(checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REFRESH_TIME,LOCATION_REFRESH_DISTANCE, mLocationListener);
+        }else{
+            Log.w(TAG, "===========getLocation========= Does not have permission!");
         }
     }
-    public void searchNearestPlace(String v2txt) {
-        Log.e("TAG", "Started");
-        v2txt = v2txt.toLowerCase();
-        String[] placesS = {"accounting", "airport", "aquarium", "atm", "attraction", "bakery", "bakeries", "bank", "bar", "cafe", "campground", "casino", "cemetery", "cemeteries", "church", "courthouse", "dentist", "doctor", "electrician", "embassy", "embassies", "establishment", "finance", "florist", "food", "grocery", "groceries", "supermarket", "gym", "health", "hospital", "laundry", "laundries", "lawyer", "library", "libraries", "locksmith", "lodging", "mosque", "museum", "painter", "park", "parking", "pharmacy", "pharmacies", "physiotherapist", "plumber", "police", "restaurant", "school", "spa", "stadium", "storage", "store", "synagog", "synagogue", "university", "universities", "zoo"};
-        String[] placesM = {"amusement park", "animal care", "animal care", "animal hospital", "art gallery", "art galleries", "beauty salon", "bicycle store", "book store", "bowling alley", "bus station", "car dealer", "car rental", "car repair", "car wash", "city hall", "clothing store", "convenience store", "department store", "electronics store", "electronic store", "fire station", "funeral home", "furniture store", "gas station", "general contractor", "hair care", "hardware store", "hindu temple", "home good store", "homes good store", "home goods store", "homes goods store", "insurance agency", "insurance agencies", "jewelry store", "liquor store", "local government office", "meal delivery", "meal deliveries", "meal takeaway", "movie rental", "movie theater", "moving company", "moving companies", "night club", "pet store", "place of worship", "places of worship", "post office", "real estate agency", "real estate agencies", "roofing contractor", "rv park", "shoe store", "shopping mall", "subway station", "taxi stand", "train station", "travel agency", "travel agencies", "veterinary care"};
-        int index;
-        for (int i = 0; i <= placesM.length - 1; i++) {
-            Log.e("TAG", "forM");
-            if (v2txt.contains(placesM[i])) {
-                Log.e("TAG", "sensedM?!");
-                index = i;
-                Uri gmmIntentUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + placesM[index]);
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);
-                finish();
-            }
-        }
-        for (int i = 0; i <= placesS.length - 1; i++) {
-            Log.e("TAG", "forS");
-            if (v2txt.contains(placesS[i])) {
-                Log.e("TAG", "sensedS?!");
-                index = i;
-                Uri gmmIntentUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + placesS[index]);
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);
-                finish();
-            }
+
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+        if(mMap.getCameraPosition().zoom > 15.5) {
+            curLat = mMap.getCameraPosition().target.latitude;
+            curLog = mMap.getCameraPosition().target.longitude;
+
+            // Connect AT API and retrieve bus stops
+            new stopsSearchByPosition().execute();
+        }else{
+            mMap.clear();
         }
     }
+
+    class stopsSearchByPosition extends AsyncTask<String, Void, Void> {
+        ArrayList<Stop> listStop = new ArrayList<>();
+
+        @Override
+        protected void onPreExecute(){
+
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+            StringBuilder strJson = new StringBuilder();
+            HttpURLConnection conn;
+
+            try {
+                URL url = new URL("https://api.at.govt.nz/v1/gtfs/stops/geosearch?lat="+curLat+"&lng="+curLog+"&distance="+sDistance+"&api_key="+getResources().getString(R.string.at_apis_key));
+                conn = (HttpURLConnection) url.openConnection();
+                conn.connect();
+                InputStream stream = new BufferedInputStream(conn.getInputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    strJson.append(line);
+                }
+
+                JSONObject jsonRootObject = new JSONObject(strJson.toString());
+
+                //Get the instance of JSONArray that contains JSONObjects
+                JSONArray jsonArray = jsonRootObject.optJSONArray("response");
+
+                //Iterate the jsonArray and print the info of JSONObjects
+                for(int i=0; i < jsonArray.length(); i++){
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+                    int stopId = Integer.parseInt(jsonObject.optString("stop_id").toString());
+                    String stopName = jsonObject.optString("stop_name").toString();
+                    double stopLat = Double.parseDouble(jsonObject.optString("stop_lat").toString());
+                    double stoplong = Double.parseDouble(jsonObject.optString("stop_lon").toString());
+
+                    Stop aStop = new Stop(stopId,stopName,stopLat,stoplong);
+                    listStop.add(aStop);
+                    publishProgress();
+                }
+
+            }catch(Exception e){
+                Log.w(TAG, "doInBackground) ------no network---------------"+e+"; "+e.getCause());
+            }finally{
+                //conn.disconnect();
+            }
+            return null;
+        }
+
+        protected void onProgressUpdate(){
+
+        }
+
+        @Override
+        protected void onPostExecute(Void v){
+            //mMap.clear();
+            // Add bus stops
+            for(int i=0; i < listStop.size(); i++) {
+                LatLng vBusStops = new LatLng(listStop.get(i).getStop_Lat(), listStop.get(i).getStop_Lon());
+                //if(vBusStops != null) {
+                if(listStop.get(i).getStop_Id() < 10000) {
+                    Marker showAllMarkers = mMap.addMarker(new MarkerOptions()
+                            .title(Integer.toString(listStop.get(i).getStop_Id()))
+                            .snippet(listStop.get(i).getStop_Name())
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
+                            .position(vBusStops));
+                }
+            } // for
+        }
+
+    } // class
+
 }
