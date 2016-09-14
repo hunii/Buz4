@@ -25,35 +25,36 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 
-import model.Route;
 import model.Trip;
 import model.TripStop;
 import model.TripStopAdapter;
 
 
 public class TimeTableActivity extends AppCompatActivity {
-    public static ArrayList<TripStop> StopList = new ArrayList<TripStop>();
-    public static ArrayList<Route> RouteList = new ArrayList<Route>();
-    private static boolean go = false;
-    private static boolean goTask2 = false;
+    public static final String TAG = "TimeTableActivity";
+    public String fileName = "at_bus_trips.txt";
+    StringBuilder sBuilder = new StringBuilder();
+    InputStream iStream = null;
+    InputStreamReader iStreamReader = null;
+    BufferedReader buffReader = null;
+    StringTokenizer sTokenizer;
+    String rLine = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        //String value = "7531";
-        new retrieveDatafromAPI().execute(getIntent().getSerializableExtra("busStopNo").toString());
-        //new retrieveDatafromAPI2().execute(value);
+        setContentView(R.layout.activity_timetable);
+        new stopTimesByStopId().execute(getIntent().getSerializableExtra("busStopNo").toString());
     }
 
     EditText edit1;
 
     public void onClickFindBtn(View v){
-        //edit1 = (EditText)findViewById(R.id.editText);
 
         if(edit1.getText().toString() != null || !edit1.getText().toString().isEmpty()) {
-            new retrieveDatafromAPI().execute(edit1.getText().toString());
+            new stopTimesByStopId().execute(edit1.getText().toString());
         }else {
 
         }
@@ -63,8 +64,8 @@ public class TimeTableActivity extends AppCompatActivity {
 
 
 
-    private class retrieveDatafromAPI extends AsyncTask<String, Void, Void> {
-        ArrayList<TripStop> listStop = new ArrayList<TripStop>();
+    private class stopTimesByStopId extends AsyncTask<String, Void, Void> {
+        ArrayList<TripStop> tStopList = new ArrayList<TripStop>();
 
         @Override
         protected void onPreExecute(){
@@ -75,21 +76,22 @@ public class TimeTableActivity extends AppCompatActivity {
         protected Void doInBackground(String... params) {
             StringBuilder strJson = new StringBuilder();
             HttpURLConnection conn;
-            Log.w("myApp", "----------------START OF API CALL");
+            Log.w(TAG, "----------------START OF API CALL");
 
 
             try {
-                Log.w("myApp", "----------------Start first conn");
+                Log.w(TAG, "----------------Start first conn");
                 URL url = new URL("https://api.at.govt.nz/v1/gtfs/stopTimes/stopId/"+params[0].toString()+"?api_key="+getResources().getString(R.string.at_apis_key));
                 conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 InputStream stream = new BufferedInputStream(conn.getInputStream());
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 String line;
+
                 while ((line = reader.readLine()) != null) {
                     strJson.append(line);
                 }
-                Log.w("myApp", "----------------after first conn");
+                Log.w(TAG, "----------------after first conn");
 
                 JSONObject jsonRootObject = new JSONObject(strJson.toString());
 
@@ -97,33 +99,31 @@ public class TimeTableActivity extends AppCompatActivity {
                 JSONArray jsonArray = jsonRootObject.optJSONArray("response");
 
                 long currentTime = System.currentTimeMillis();
-                //Date dateForm = new Date(currentTime);
-                //int currentTimeinMilli = (dateForm.getHours()*3600)+(dateForm.getMinutes()*60)+(dateForm.getSeconds());
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(currentTime);
                 int currentTimeinMilli = (calendar.get(Calendar.HOUR_OF_DAY)*3600) + (calendar.get(Calendar.MINUTE)*60) + calendar.get(Calendar.SECOND);
+                //Log.w(TAG, "==============Current Time========"+calendar.get(Calendar.HOUR_OF_DAY)+" : "+calendar.get(Calendar.MINUTE)+" : "+calendar.get(Calendar.SECOND));
+                //Log.w(TAG, "==============currentTimeinMilli========"+currentTimeinMilli);
 
                 //Iterate the jsonArray and print the info of JSONObjects
                 for(int i=0; i < jsonArray.length(); i++){
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                    String trip = jsonObject.optString("trip_id").toString();
-                    int id = Integer.parseInt(jsonObject.optString("stop_id").toString());
+                    String tId = jsonObject.optString("trip_id").toString();
+                    int arrTime = Integer.parseInt(jsonObject.optString("arrival_time_seconds").toString());
+                    int seqNo = Integer.parseInt(jsonObject.optString("stop_sequence").toString());
 
-                    int arr = Integer.parseInt(jsonObject.optString("arrival_time_seconds").toString());
-                    int dep = Integer.parseInt(jsonObject.optString("departure_time_seconds").toString());
-
-                    int seq = Integer.parseInt(jsonObject.optString("stop_sequence").toString());
-
-                    if((arr >= currentTimeinMilli) && (arr <= currentTimeinMilli+7200)) {
-                        TripStop aStop = new TripStop(trip, id, arr, dep, seq);
-                        listStop.add(aStop);
+                    if((arrTime >= currentTimeinMilli) && (arrTime <= currentTimeinMilli+1800)) {
+                        //Log.w(TAG, "==============Trip ID========"+tId);
+                        //Log.w(TAG, "==============Arrive Time========"+arrTime / 3600+" : "+(arrTime / 60) % 60+" : "+arrTime % 60);
+                        TripStop tripStop = new TripStop(tId, arrTime, seqNo);
+                        tStopList.add(tripStop);
                     }
                 }
-                Collections.sort(listStop);
+                Collections.sort(tStopList);
 
             }catch(Exception e){
-                Log.w("myApp", "-------------------no network---------------"+e+e.getCause());
+                Log.w(TAG, "-------------------no network---------------"+e+e.getCause());
             }finally{
                 //conn.disconnect();
             }
@@ -131,52 +131,22 @@ public class TimeTableActivity extends AppCompatActivity {
         }
 
         protected void onProgressUpdate(){
+
         }
 
         @Override
-        protected void onPostExecute(Void v){
-            //Return to global variable
-            StopList = listStop;
-            Log.d("myApp777777777777777"+listStop.size(), ""+goTask2 );
-            goTask2 = true;
-            //Log.d("myApp777777777777777", ""+goTask2 );
-            new retrieveDatafromAPI2().execute(listStop);
-            while(!go){
-                try
-                {
-                    Log.d("myApp", "Waiting for Task2");
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
+        protected void onPostExecute(Void v) {
 
-            }
-
-//            ListView listView = (ListView)findViewById(R.id.listview_tripstop);
-//            TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(),listStop);
-//
-//            listView.setAdapter(tripAdap);
-//            listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-//
-//                @Override
-//                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                    Toast.makeText(getApplicationContext(),"Clicked id of "+ view.getTag(), Toast.LENGTH_SHORT).show();
-//                }
-//            });
-
-            Log.w("myApp", "---------------F   I   N    A    L---------------"+listStop.size());
+            new readTripTxt().execute(tStopList);
 
         }
-
     }
 
-
-    private class retrieveDatafromAPI2 extends AsyncTask<ArrayList<TripStop>, Void, Void> {
-        ArrayList<Trip> listRoute = new ArrayList<Trip>();
-        HashMap<String,Trip> listRouteHash = new HashMap<String, Trip>();
-        ArrayList<TripStop> listTrip = new ArrayList<TripStop>();
+    private class readTripTxt extends AsyncTask<ArrayList<TripStop>, Void, Void> {
+        HashMap<String,Trip> findTripInfo = new HashMap<String, Trip>();
+        ArrayList<TripStop> tStopList2 = new ArrayList<TripStop>();
+        ArrayList<Trip> tripList = new ArrayList<Trip>();
+        ArrayList<String> tripInfo = new ArrayList<>();
 
         @Override
         protected void onPreExecute(){
@@ -185,81 +155,46 @@ public class TimeTableActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(ArrayList<TripStop>... params) {
-            listTrip = params[0];
-
-            while(!goTask2){
-                try
-                {
-                    Log.d("myApp", "Waiting for Task1 all the data");
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-
-            HttpURLConnection conn;
-            StringBuilder strJson5 = new StringBuilder();
-            Log.w("myApp", "----------------START OF API 2 CALL");
-
+            tStopList2 = params[0];
 
             try {
-                long startTime = System.currentTimeMillis();
 
-                URL url23 = new URL("https://api.at.govt.nz/v1/gtfs/trips/?api_key="+getResources().getString(R.string.at_apis_key));
-                conn = (HttpURLConnection) url23.openConnection();
-                conn.connect();
-                InputStream stream23 = new BufferedInputStream(conn.getInputStream());
-                BufferedReader reader22 = new BufferedReader(new InputStreamReader(stream23));
-                String line12;
-                while ((line12 = reader22.readLine()) != null) {
-                    strJson5.append(line12);
+                iStream = getResources().getAssets().open(fileName);
+                iStreamReader = new InputStreamReader(iStream);
+                buffReader = new BufferedReader(iStreamReader);
+                rLine = buffReader.readLine();
+
+                while ((rLine = buffReader.readLine()) != null) {
+                    tripInfo.add(rLine);
                 }
-                long endTime = System.currentTimeMillis();
-                long duration = (endTime - startTime);
-                Log.d("-->> Time for first", "&&&&&&&&&&&&&&&&&&&&&&&&&&"+(duration/1000.0) );
+                buffReader.close();
 
-                JSONObject jsonRootObject = new JSONObject(strJson5.toString());
-
-                //Get the instance of JSONArray that contains JSONObjects
-                JSONArray jsonArray = jsonRootObject.optJSONArray("response");
-
-                for(int i=0; i < jsonArray.length(); i++){
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-                    String routeid = jsonObject.optString("route_id").toString();
-                    String tripid = jsonObject.optString("trip_id").toString();
-                    String destination = jsonObject.optString("trip_headsign").toString();
-                    String shapeid = jsonObject.optString("shape_id").toString();
-                    String serviceid = jsonObject.optString("service_id").toString();
-                    //Log.w("SECOND call", "------"+i+"--------"+routeid+"   "+tripid+"   "+destination+"------------");
-
-                        Trip route = new Trip(tripid, routeid, serviceid, destination, shapeid);
-                        listRoute.add(route);
-                        listRouteHash.put(tripid, route);
+                for(int t=0; t < tripInfo.size(); t++) {
+                    sTokenizer = new StringTokenizer(tripInfo.get(t), ",");
+                    //String block_id = sTokenizer.nextToken();
+                    String route_id = sTokenizer.nextToken();
+                    String bus_num = route_id.substring(0, 3);
+                    String direction_id = sTokenizer.nextToken();
+                    String trip_headsign = sTokenizer.nextToken();
+                    String shape_id = sTokenizer.nextToken();
+                    String service_id = sTokenizer.nextToken();
+                    String trip_id = sTokenizer.nextToken();
+                    Trip route = new Trip(trip_id,route_id,bus_num,trip_headsign);
+                    tripList.add(route);
+                    findTripInfo.put(trip_id, route);
                 }
 
-                long startTime2 = System.currentTimeMillis();
-                for(int i=0; i < listTrip.size(); i++){
-                    Trip temp = listRouteHash.get(listTrip.get(i).getTrip());
-                    String route = temp.getTrip_Route();
-
-                    listTrip.get(i).setRoute(route);
-                    listTrip.get(i).setDestination(temp.getTrip_headSign());
-                    listTrip.get(i).setBusNo(Integer.parseInt(route.substring(0, 3)));
+                for(int x=0; x < tStopList2.size(); x++) {
+                    Trip tmpTripStop = findTripInfo.get(tStopList2.get(x).getTrip());
+                    String roudId = tmpTripStop.getTrip_Route();
+                    tStopList2.get(x).setRoute(roudId);
+                    tStopList2.get(x).setDestination(tmpTripStop.getTrip_headSign());
+                    tStopList2.get(x).setBusNo(roudId.substring(0, 3));
                 }
-                long endTime2 = System.currentTimeMillis();
-                long duration2 = (endTime2 - startTime2);
-                Log.d("-->> Time for Second", "&&&&&&&&&&&&&&&"+(duration2/1000.0) + "   Trip:" + listTrip.size() + "   Route:" + listRoute.size() );
 
-                StopList = listTrip;
-                go = true;
 
             }catch(Exception e){
-                Log.w("myApp", "-------------------no 2 network---------------"+e+e.getCause());
-            }finally{
-                //conn.disconnect();
+                e.getCause();
             }
             return null;
         }
@@ -269,29 +204,21 @@ public class TimeTableActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void v){
-            //Return to global variable
-            Log.d("myApp777777777777777", ""+go );
-            //RouteList = listRoute;
-            StopList = listTrip;
-            go = true;
 
-            ListView listView = (ListView)findViewById(R.id.listview_tripstop);
-            TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(),StopList);
+            ListView listView = (ListView) findViewById(R.id.listview_tripstop);
+            TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(), tStopList2);
 
             listView.setAdapter(tripAdap);
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     Intent intent = new Intent(TimeTableActivity.this, RouteActivity.class); // Bus stop list
-                    intent.putExtra("trip_id", listTrip.get(i).getTrip());
+                    intent.putExtra("trip_id", tStopList2.get(i).getTrip());
                     startActivity(intent);
                     //Toast.makeText(getApplicationContext(),"Clicked id of "+ view.getTag(), Toast.LENGTH_SHORT).show();
                 }
             });
-
-            Log.d("myApp777777777777777", ""+go );
-            Log.w("myApp", "---------------F   I   N    A    L   2 ---------------");
 
         }
 

@@ -9,8 +9,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -41,7 +39,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import model.Route;
+import model.Shape;
 import model.Stop;
 
 /**
@@ -69,9 +67,11 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route);
-        tripId = "15454038806-20160803113210_v43.25";//getIntent().getSerializableExtra("trip_id").toString();
+        tripId = getIntent().getSerializableExtra("trip_id").toString();
+        //Log.w(TAG, "=============tripId==========="+tripId);
+
+        // Make line of the bus route
         new shapeByTripId().execute(tripId);
-        Log.w(TAG, "=============tripId==========="+tripId);
 
         //To get MapFragment reference from xml layout
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -89,8 +89,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-        new stopByTripId().execute();
-        //new realTimeVehicleLocations().execute();
 
     }
 
@@ -148,23 +146,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
     };
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case REQUEST_CODE_ASK_PERMISSIONS:
@@ -204,7 +185,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
     }
 
     class shapeByTripId extends AsyncTask<String, Void, Void> {
-        ArrayList<Route> tripShape = new ArrayList<>();
+        ArrayList<Shape> tripShape = new ArrayList<>();
 
         @Override
         protected void onPreExecute(){
@@ -241,8 +222,8 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
                     double shapelon = Double.parseDouble(jsonObject.optString("shape_pt_lon").toString());
                     int shapeSequence = Integer.parseInt(jsonObject.optString("shape_pt_sequence").toString());
 
-                    Route aRoute = new Route(shapeId,shapeLat,shapelon,shapeSequence);
-                    tripShape.add(aRoute);
+                    Shape aShape = new Shape(shapeId,shapeLat,shapelon,shapeSequence);
+                    tripShape.add(aShape);
                     publishProgress();
                 }
 
@@ -290,6 +271,9 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
             }
             // get Mid-Point
             getMidPoint(sLat, sLon, eLat, eLon);
+
+            new stopByTripId().execute();
+            //new realTimeVehicleLocations().execute();
         }
 
     } // shapeByTripId
@@ -358,7 +342,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
                 LatLng pTripStops = new LatLng(tripStops.get(i).getStop_Lat(), tripStops.get(i).getStop_Lon());
 
                 Marker showAllMarkers = mMap.addMarker(new MarkerOptions()
-                        .title(Integer.toString(tripStops.get(i).getStop_Id()))
+                        .title(i+1+". "+Integer.toString(tripStops.get(i).getStop_Id()))
                         .snippet(tripStops.get(i).getStop_Name())
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
                         .position(pTripStops));
@@ -390,89 +374,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         }
 
     } // stopByTripId
-/*
-    // Real-Time Bus Tracking
-    class realTimeVehicleLocations extends AsyncTask<String, Void, Void> {
-        ArrayList<Stop> realTimeLocation = new ArrayList<>();
 
-        @Override
-        protected void onPreExecute(){
-
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-            StringBuilder strJson = new StringBuilder();
-            HttpURLConnection conn;
-
-            try {
-                URL url = new URL("https://api.at.govt.nz/v1/public/realtime/vehiclelocations?api_key="+getResources().getString(R.string.at_apis_key));
-                conn = (HttpURLConnection) url.openConnection();
-                conn.connect();
-                InputStream stream = new BufferedInputStream(conn.getInputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    strJson.append(line);
-                }
-
-                JSONObject jsonRootObject = new JSONObject(strJson.toString());
-
-                //Get the instance of JSONArray that contains JSONObjects
-                JSONObject responseObj = jsonRootObject.getJSONObject("response");
-                JSONArray jsonArray = responseObj.optJSONArray("entity");
-
-                //Iterate the jsonArray and print the info of JSONObjects
-                for(int i=0; i < jsonArray.length(); i++){
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    JSONObject vehicleObj = jsonObject.getJSONObject("vehicle");
-                    JSONObject tripObj = vehicleObj.getJSONObject("trip");
-                    JSONObject positionObj = vehicleObj.getJSONObject("position");
-
-                        int stopId = 123;//Integer.parseInt(jsonObject.optString("stop_id").toString());
-                        String stopName = tripObj.optString("trip_id").toString();
-                        double stopLat = Double.parseDouble(positionObj.optString("latitude").toString());
-                        double stoplon = Double.parseDouble(positionObj.optString("longitude").toString());
-                        Log.w(TAG, "================aaaaa================="+stopName);
-                        Log.w(TAG, "===============aaaaa==================" + stopLat);
-                        Log.w(TAG, "=================aaaaa================" + stoplon);
-                        Stop bStop = new Stop(stopId,stopName,stopLat,stoplon);
-                        realTimeLocation.add(bStop);
-                        publishProgress();
-                }
-
-            }catch(Exception e){
-                Log.w(TAG, "doInBackground) ------no network---------------"+e+"; "+e.getCause());
-            }finally{
-                //conn.disconnect();
-            }
-            return null;
-        }
-
-        protected void onProgressUpdate(){
-
-        }
-
-        @Override
-        protected void onPostExecute(Void v){
-            Log.w(TAG, "=================bbbbbbb================");
-            // View Bus Route
-            for(int i=0; i < realTimeLocation.size(); i++) {
-                if(realTimeLocation.get(i).getStop_Name().equals("13135037533-20160803113210_v43.25")) {
-                    LatLng aaaBus = new LatLng(realTimeLocation.get(i).getStop_Lat(), realTimeLocation.get(i).getStop_Lon());
-                    Log.w(TAG, "=================bbbbbbb================" + aaaBus);
-                    mMap.addMarker(new MarkerOptions()
-                            .title(Integer.toString(realTimeLocation.get(i).getStop_Id()))
-                            .snippet(realTimeLocation.get(i).getStop_Name())
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
-                            .position(aaaBus));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(aaaBus, 20));
-                }
-            }
-        }
-
-    } // realTimeVehicleLocations
-*/
     public void getMidPoint(double lat1, double lon1, double lat2, double lon2){
 
         double dLon = Math.toRadians(lon2 - lon1);
@@ -489,13 +391,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
         LatLng gMidLatLon = new LatLng(Math.toDegrees(lat3), Math.toDegrees(lon3));
         // Move to Mid-Point
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 12));
-    }
-
-    public LatLng moveToMidLocation(double mLat, double mLon){
-        LatLng midLocation = new LatLng(mLat, mLon);
-
-        return midLocation;
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 11));
     }
 
 }

@@ -3,5 +3,9 @@
     <string name="google_maps_key">AIzaSyCRA-fnBc9Rw9V9EnM84gwxNaJLIk7KKak</string>
     <string name="at_apis_key">95bd9f69-9d26-43e6-a676-9f7a12dd8c68</string>
     <string name="menu_setting">Menu</string>
+    <string name="previous_page">Back</string>
     <string name="current_location">Current Location</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
 </resources>

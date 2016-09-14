@@ -1,7 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
-    <item android:id="@+id/action_settings" android:title="@string/menu_setting"
-    android:orderInCategory="100" />
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|top"
+            android:gravity="center_vertical"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/setting_update"
+                android:layout_width="fill_parent"
+                android:layout_height="56dip"
+                android:layout_gravity="center_vertical"
+                android:drawablePadding="8dip"
+                android:gravity="center_vertical"
+                android:paddingLeft="12dip"
+                android:text="Update!?"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="1px"
+                android:background="#D2D2C8" />
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="1px"
+                android:background="#D2D2C8" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="40dip"
+                android:layout_gravity="center_vertical"
+                android:drawablePadding="8dip"
+                android:gravity="center_vertical"
+                android:paddingLeft="12dip"
+                android:text="Version info?"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </menu>

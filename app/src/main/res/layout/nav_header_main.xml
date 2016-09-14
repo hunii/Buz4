@@ -22,13 +22,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:text="Android Studio"
+        android:text="AUT - SDP S51"
+        android:textSize="18dp"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="android.studio@android.com" />
+        android:text="BUZ4 - Auckland Bus" />
 
 </LinearLayout>

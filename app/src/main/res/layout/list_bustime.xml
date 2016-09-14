@@ -12,6 +12,6 @@
         android:id="@+id/bus_time"
         android:textSize="20dp"
         android:textColor="#000000"
-        android:text="TIME TO GO"/>
+        android:text="No search results..."/>
 
 </LinearLayout>

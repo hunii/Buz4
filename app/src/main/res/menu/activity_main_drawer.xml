@@ -1,35 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/mFavourites"
             android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:title="Favourites"/>
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/mFindStop"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:title="Find a stop"/>
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/mViewRoutes"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:title="View routes"/>
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="General">
         <menu>
             <item
-                android:id="@+id/nav_share"
+                android:id="@+id/mFeedback"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Feedback"/>
             <item
-                android:id="@+id/nav_send"
+                android:id="@+id/mReference"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="Reference" />
         </menu>
     </item>
 

@@ -64,7 +64,7 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_loading);
+        setContentView(R.layout.activity_findstops);
 
         //To get MapFragment reference from xml layout
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
