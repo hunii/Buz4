@@ -3,6 +3,7 @@ package com.example.james.buz4;
 /**
  * Created by Taehyun Kim on 09/08/2016.
  */
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -13,7 +14,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -43,15 +44,15 @@ import java.util.ArrayList;
 
 import model.Stop;
 
-public class LoadingActivity extends FragmentActivity implements OnMapReadyCallback,
+public class FindStopsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         GoogleMap.OnInfoWindowClickListener,
         GoogleMap.OnCameraChangeListener {
 
-    protected double curLat, curLog;
+    public double curLat, curLog;
     int sDistance = 300;
-    public static final String TAG = "LoadingActivity";
+    public static final String TAG = "FindStopsActivity";
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
@@ -79,30 +80,27 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
         mMap.setOnCameraChangeListener(this);
         mMap.setOnInfoWindowClickListener(this);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.getUiSettings().setTiltGesturesEnabled(false);
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-
         // Init location
         LatLng initPoint = new LatLng(-36.8524, 174.7644); // AUT WT Building
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
-        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initPoint ,17));
-
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
     }
 
     @Override
     public void onInfoWindowClick (Marker marker) {
+        Log.w(TAG, "onInfoWindowClick===================================");
         marker.showInfoWindow();
-        //Intent intent = new Intent(LoadingActivity.this, MainActivity.class); // Bus stop list
-        Intent intent = new Intent(LoadingActivity.this, RouteActivity.class); // Bus route
-        //Intent intent = new Intent(LoadingActivity.this, ArActivity.class); // AR
+        Intent intent = new Intent(FindStopsActivity.this, TimeTableActivity.class); // Bus stop list
+        //Intent intent = new Intent(FindStopsActivity.this, RouteActivity.class); // Bus route
+        //Intent intent = new Intent(FindStopsActivity.this, ArActivity.class); // AR
         intent.putExtra("busStopNo", marker.getTitle());
         startActivity(intent);
     }
 
     protected synchronized void buildGoogleApiClient() {
-        Log.w(TAG, "========== buildGoogleApiClient ==========");
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -142,8 +140,8 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
 
             curLat = location.getLatitude();
             curLog = location.getLongitude();
-            //Log.w(TAG, "========== onLocationChanged curLat==========" + curLat);
-            //Log.w(TAG, "========== onLocationChanged curLog==========" + curLog);
+            //Log.w(TAG, "========== onLocationChanged curLat========22222222222222==" + curLat);
+            //Log.w(TAG, "========== onLocationChanged curLog========2222222222222==" + curLog);
 
         }
 
@@ -165,19 +163,10 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        Log.w(TAG, "====================onCreateOptionsMenu===================");
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -262,7 +251,7 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
                 JSONArray jsonArray = jsonRootObject.optJSONArray("response");
 
                 //Iterate the jsonArray and print the info of JSONObjects
-                for(int i=0; i < jsonArray.length(); i++){
+                for(int i=0; i < jsonArray.length(); i++) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
 
                     int stopId = Integer.parseInt(jsonObject.optString("stop_id").toString());
@@ -270,7 +259,7 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
                     double stopLat = Double.parseDouble(jsonObject.optString("stop_lat").toString());
                     double stoplong = Double.parseDouble(jsonObject.optString("stop_lon").toString());
 
-                    Stop aStop = new Stop(stopId,stopName,stopLat,stoplong);
+                    Stop aStop = new Stop(stopId, stopName, stopLat, stoplong);
                     listStop.add(aStop);
                     publishProgress();
                 }
@@ -289,13 +278,11 @@ public class LoadingActivity extends FragmentActivity implements OnMapReadyCallb
 
         @Override
         protected void onPostExecute(Void v){
-            //mMap.clear();
             // Add bus stops
             for(int i=0; i < listStop.size(); i++) {
                 LatLng vBusStops = new LatLng(listStop.get(i).getStop_Lat(), listStop.get(i).getStop_Lon());
-                //if(vBusStops != null) {
                 if(listStop.get(i).getStop_Id() < 10000) {
-                    Marker showAllMarkers = mMap.addMarker(new MarkerOptions()
+                    mMap.addMarker(new MarkerOptions()
                             .title(Integer.toString(listStop.get(i).getStop_Id()))
                             .snippet(listStop.get(i).getStop_Name())
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
