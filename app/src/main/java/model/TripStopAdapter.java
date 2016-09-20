@@ -1,6 +1,7 @@
 package model;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -44,45 +45,51 @@ public class TripStopAdapter extends BaseAdapter {
         View v = View.inflate(context, R.layout.list_bustime, null);
         TextView busTime = (TextView) v.findViewById(R.id.bus_time);
 
-        long currentTime = System.currentTimeMillis();
-//        Date dateForm = new Date(currentTime);
-//        int currentTimeinMilli = (dateForm.getHours() * 3600) + (dateForm.getMinutes() * 60) + (dateForm.getSeconds());
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(currentTime);
-        int currentTimeinMilli = (calendar.get(Calendar.HOUR_OF_DAY)*3600) + (calendar.get(Calendar.MINUTE)*60) + calendar.get(Calendar.SECOND);
-
-        //Log.w("TripStopAdapter", "======Current Hour===" + calendar.get(Calendar.HOUR_OF_DAY) + ", Min=====" + calendar.get(Calendar.MINUTE) + ", Sec=====" + calendar.get(Calendar.SECOND));
-        //Log.w("TripStopAdapter", "======currentTimeinMilli===" +currentTimeinMilli);
-
-        int timeinsec = mTripStopList.get(i).getArrival_Time();
+        //Get bus number and destination
         String bNo = mTripStopList.get(i).getBusNo();
         String dest = mTripStopList.get(i).getDestination();
 
+        //Bus arriving time into h/m/s format
+        int busTimeinMilliSec = mTripStopList.get(i).getArrival_Time();
+        int sHour = busTimeinMilliSec / 3600;
+        int sMinute = (busTimeinMilliSec / 60) % 60;
+        int sSecond = busTimeinMilliSec % 60;
+        Log.w("TripStopAdapter", "======Bus arrive time)))   sHour===" +sHour+ ", sMinute=====" +sMinute+ ", sSecond=====" +sSecond+ ", sTIME=====" +busTimeinMilliSec);
 
-        int sHour = timeinsec / 3600;
-        int sMinute = (timeinsec / 60) % 60;
-        int sSecond = timeinsec % 60;
-        //Log.w("TripStopAdapter", "======Bus arrive time)))   sHour===" +sHour+ ", sMinute=====" +sMinute+ ", sSecond=====" +sSecond);
+        //Current time into h/m/s format
+        long currentTime = System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentTime);
+        int currentHr = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMin = calendar.get(Calendar.MINUTE);
+        int currentSec = calendar.get(Calendar.SECOND);
+        int currentTimeinMilliSeconds = currentHr * (60 * 60) + currentMin * 60 + currentSec * 1;
+        Log.w("TripStopAdapter", "======CUrrent arrive time)))   cHour===" +currentHr+ ", cMinute=====" +currentMin+ ", cSecond=====" +currentSec+ ", cTIME=====" +currentTimeinMilliSeconds);
 
-        //Log.w("+++++++++" + timeinsec, "" + h + ":" + m + ":" + s);
-        if (sSecond >= 30) {
+        //Zero decimal placing of seconds to minutes
+        if (sSecond >= 30)
             sMinute += 1;
-        }
-
+        //Change 24:00 into 00:00
+        if (sHour == 24)
+            sHour = 0;
         String vDueTime = "";
         String vArriveTime = String.format("%02d:%02d", sHour, sMinute);
-        //busTime.setText(bNo+"  "+dest+"  "+String.format("%02d:%02d",h,m)+"  "+(m-dateForm.getMinutes())+" mins");
-        if (sHour == calendar.get(Calendar.HOUR_OF_DAY)) {
-            vDueTime = (sMinute - calendar.get(Calendar.MINUTE)) + " mins";
-        } else if ((sMinute - calendar.get(Calendar.MINUTE)) < 1) {
-            vDueTime = "    *";
+
+        //If bus times are within 1 hour, due time is shown
+        if((busTimeinMilliSec - currentTimeinMilliSeconds) <= 3600){
+            if((busTimeinMilliSec - currentTimeinMilliSeconds) <= 120){
+                vDueTime = "[  *  ]";
+            }else{
+                //vDueTime = (sMinute - currentMin) + " m";
+                vDueTime = ("[ "+((busTimeinMilliSec - currentTimeinMilliSeconds)/ 60) % 60) + " m ]";
+            }
+        }else{//If bus times are over 1 hour, due time is blank
+            vDueTime = "    ";
         }
-        //Log.w("TripStopAdapter", "======bNo===" + bNo + ", dest=====" + dest + ", vArriveTime=====" + vArriveTime + ", vDueTime======" + vDueTime);
-        //if(i == 0 || (i > 0 && mTripStopList.get(i).getBusNo() != mTripStopList.get(i-1).getBusNo() && mTripStopList.get(i).getArrival_Time() != mTripStopList.get(i-1).getArrival_Time())) {
-            busTime.setText(bNo + "  " + dest + "  " + vArriveTime + "  " + vDueTime);
-        //}else{
-            //busTime.setText("Duplicated data!");
-        //}
+
+        //Display bus time table
+        busTime.setText(bNo + "   " + vArriveTime + "   " + dest + "  " + vDueTime+" ");
+
         v.setTag(i);
         return v;
     }

@@ -25,75 +25,99 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
+import model.ServiceCalendar;
 import model.Trip;
 import model.TripStop;
 import model.TripStopAdapter;
 
+/**
+ *This class represent activity to show the lists of bus time table for a particular bus stop.
+ *
+ * Developed by James Joung
+ * Version Updated: 14 Sep 2016
+ */
 
 public class TimeTableActivity extends AppCompatActivity {
-    public static final String TAG = "TimeTableActivity";
-    public String fileName = "at_bus_trips.txt";
-    StringBuilder sBuilder = new StringBuilder();
-    InputStream iStream = null;
-    InputStreamReader iStreamReader = null;
-    BufferedReader buffReader = null;
-    StringTokenizer sTokenizer;
-    String rLine = "";
+    private static final String TAG = "TimeTableActivity";
+    private String fileNameTrip = "at_bus_trips.txt";
+    private String fileNameCalendar = "calendar.txt";
+    private InputStream iStream = null;
+    private InputStreamReader iStreamReader = null;
+    private BufferedReader buffReader = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
+
         new stopTimesByStopId().execute(getIntent().getSerializableExtra("busStopNo").toString());
     }
 
-    EditText edit1;
-
-    public void onClickFindBtn(View v){
-
-        if(edit1.getText().toString() != null || !edit1.getText().toString().isEmpty()) {
-            new stopTimesByStopId().execute(edit1.getText().toString());
-        }else {
-
-        }
-        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.hideSoftInputFromWindow(edit1.getWindowToken(), 0);
-    }
-
-
-
-    private class stopTimesByStopId extends AsyncTask<String, Void, Void> {
+    /**
+     * This inner class is a thread that runs a network connection to call an API for Json date
+     */
+    public class stopTimesByStopId extends AsyncTask<String, Void, Void> {
         ArrayList<TripStop> tStopList = new ArrayList<TripStop>();
+        HashMap<String, ServiceCalendar> serviceHash = new HashMap<String, ServiceCalendar>();
 
         @Override
         protected void onPreExecute(){
-
         }
 
+        /**
+         * This method establishes HTTP connection to request Json data from API
+         * @param params represnts string value of bus stop number
+         * @return it returns a list of Trip object with trip_id, arrival_time and sequence number.
+         */
         @Override
         protected Void doInBackground(String... params) {
-            StringBuilder strJson = new StringBuilder();
-            HttpURLConnection conn;
-            Log.w(TAG, "----------------START OF API CALL");
-
-
+            String JsonString;
+            Log.w(TAG, "----------------BUS WEEKLY ROSTER UPDATE");
             try {
-                Log.w(TAG, "----------------Start first conn");
-                URL url = new URL("https://api.at.govt.nz/v1/gtfs/stopTimes/stopId/"+params[0].toString()+"?api_key="+getResources().getString(R.string.at_apis_key));
-                conn = (HttpURLConnection) url.openConnection();
-                conn.connect();
-                InputStream stream = new BufferedInputStream(conn.getInputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                String line;
 
-                while ((line = reader.readLine()) != null) {
-                    strJson.append(line);
+                //Bus weekly service update
+                iStream = getResources().getAssets().open(fileNameCalendar);
+                iStreamReader = new InputStreamReader(iStream);
+                buffReader = new BufferedReader(iStreamReader);
+                String rLine;
+                while ((rLine = buffReader.readLine()) != null) {
+                    String[] lines = rLine.split(",");
+                    ServiceCalendar sc = new ServiceCalendar(lines[0]);
+                    if(lines[3].equals("1")){
+                        sc.Mon = true;
+                    }
+                    if(lines[4].equals("1")){
+                        sc.Tue = true;
+                    }
+                    if(lines[5].equals("1")){
+                        sc.Wed = true;
+                    }
+                    if(lines[6].equals("1")){
+                        sc.Thu = true;
+                    }
+                    if(lines[7].equals("1")){
+                        sc.Fri = true;
+                    }
+                    if(lines[8].equals("1")){
+                        sc.Sat = true;
+                    }
+                    if(lines[9].equals("1")){
+                        sc.Sun = true;
+                    }
+                    serviceHash.put(lines[0], sc);
                 }
-                Log.w(TAG, "----------------after first conn");
+                buffReader.close();
 
-                JSONObject jsonRootObject = new JSONObject(strJson.toString());
+
+                Log.w(TAG, "----------------START OF API CALL");
+                //API calling Method
+                JsonString = stopTimesByStopIdAPI(params[0].toString());
+                Log.w(TAG, "----------------END of API CALL");
+
+                JSONObject jsonRootObject = new JSONObject(JsonString);
 
                 //Get the instance of JSONArray that contains JSONObjects
                 JSONArray jsonArray = jsonRootObject.optJSONArray("response");
@@ -101,24 +125,58 @@ public class TimeTableActivity extends AppCompatActivity {
                 long currentTime = System.currentTimeMillis();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(currentTime);
+                String week =  calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US);
                 int currentTimeinMilli = (calendar.get(Calendar.HOUR_OF_DAY)*3600) + (calendar.get(Calendar.MINUTE)*60) + calendar.get(Calendar.SECOND);
-                //Log.w(TAG, "==============Current Time========"+calendar.get(Calendar.HOUR_OF_DAY)+" : "+calendar.get(Calendar.MINUTE)+" : "+calendar.get(Calendar.SECOND));
-                //Log.w(TAG, "==============currentTimeinMilli========"+currentTimeinMilli);
-
                 //Iterate the jsonArray and print the info of JSONObjects
-                for(int i=0; i < jsonArray.length(); i++){
+                for(int i=0; i < jsonArray.length(); i++) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
 
                     String tId = jsonObject.optString("trip_id").toString();
                     int arrTime = Integer.parseInt(jsonObject.optString("arrival_time_seconds").toString());
                     int seqNo = Integer.parseInt(jsonObject.optString("stop_sequence").toString());
+                    String[] charindex = tId.split("_");
+                    if((arrTime >= currentTimeinMilli) && (arrTime <= currentTimeinMilli+7200)) {
+                        if (charindex[1].equals("v45.21")) {
+                            boolean today = false;
+                            //System.out.println(week+ "   "+serviceHash.size());
+                            switch (week) {
+                                case "Mon":
+                                    if (serviceHash.get(tId).Mon)
+                                        today = true;
+                                    break;
+                                case "Tue":
+                                    if (serviceHash.get(tId).Tue)
+                                        today = true;
+                                    break;
+                                case "Wed":
+                                    if (serviceHash.get(tId).Wed)
+                                        today = true;
+                                    break;
+                                case "Thu":
+                                    if (serviceHash.get(tId).Thu)
+                                        today = true;
+                                    break;
+                                case "Fri":
+                                    if (serviceHash.get(tId).Fri)
+                                        today = true;
+                                    break;
+                                case "Sat":
+                                    if (serviceHash.get(tId).Sat)
+                                        today = true;
+                                    break;
+                                case "Sun":
+                                    if (serviceHash.get(tId).Sun)
+                                        today = true;
+                                    break;
+                            }
+                            if (today) {
+                                tStopList.add(new TripStop(tId, arrTime, seqNo));
 
-                    if((arrTime >= currentTimeinMilli) && (arrTime <= currentTimeinMilli+1800)) {
-                        //Log.w(TAG, "==============Trip ID========"+tId);
-                        //Log.w(TAG, "==============Arrive Time========"+arrTime / 3600+" : "+(arrTime / 60) % 60+" : "+arrTime % 60);
-                        TripStop tripStop = new TripStop(tId, arrTime, seqNo);
-                        tStopList.add(tripStop);
+                            }
+                        }
                     }
+
+
                 }
                 Collections.sort(tStopList);
 
@@ -130,59 +188,62 @@ public class TimeTableActivity extends AppCompatActivity {
             return null;
         }
 
-        protected void onProgressUpdate(){
-
-        }
-
+        /**
+         * On onPostExecute, it executes an another thread to handle
+         * received data and match it against the data file to add Bus number and destination to the list of Trip objects.
+         */
         @Override
         protected void onPostExecute(Void v) {
-
             new readTripTxt().execute(tStopList);
-
         }
     }
 
-    private class readTripTxt extends AsyncTask<ArrayList<TripStop>, Void, Void> {
+    /**
+     * This inner class is a thread running after the API call, it will read preloaded text file to match trip_id to add bus number and destination
+     * to the list of Trip objects.
+     */
+    public class readTripTxt extends AsyncTask<ArrayList<TripStop>, Void, Void> {
         HashMap<String,Trip> findTripInfo = new HashMap<String, Trip>();
         ArrayList<TripStop> tStopList2 = new ArrayList<TripStop>();
         ArrayList<Trip> tripList = new ArrayList<Trip>();
         ArrayList<String> tripInfo = new ArrayList<>();
 
+
         @Override
         protected void onPreExecute(){
-
         }
 
+        /**
+         * Bufferreading trip_file to match with the returned list of Trip objects to add Bus number and destination
+         * @param params list of Trip objects
+         * @return
+         */
         @Override
         protected Void doInBackground(ArrayList<TripStop>... params) {
             tStopList2 = params[0];
 
             try {
-
-                iStream = getResources().getAssets().open(fileName);
+                iStream = getResources().getAssets().open(fileNameTrip);
                 iStreamReader = new InputStreamReader(iStream);
                 buffReader = new BufferedReader(iStreamReader);
-                rLine = buffReader.readLine();
+                String rLine = buffReader.readLine();
 
                 while ((rLine = buffReader.readLine()) != null) {
-                    tripInfo.add(rLine);
-                }
-                buffReader.close();
-
-                for(int t=0; t < tripInfo.size(); t++) {
-                    sTokenizer = new StringTokenizer(tripInfo.get(t), ",");
-                    //String block_id = sTokenizer.nextToken();
-                    String route_id = sTokenizer.nextToken();
+                    String[] lines = rLine.split(",");
+                    String route_id = lines[1];
                     String bus_num = route_id.substring(0, 3);
-                    String direction_id = sTokenizer.nextToken();
-                    String trip_headsign = sTokenizer.nextToken();
-                    String shape_id = sTokenizer.nextToken();
-                    String service_id = sTokenizer.nextToken();
-                    String trip_id = sTokenizer.nextToken();
+                    String direction_id = lines[2];
+                    String trip_headsign = lines[3];
+                    String shape_id = lines[4];
+                    String service_id = lines[5];
+                    String trip_id = lines[6];
                     Trip route = new Trip(trip_id,route_id,bus_num,trip_headsign);
                     tripList.add(route);
                     findTripInfo.put(trip_id, route);
                 }
+                buffReader.close();
+
+
 
                 for(int x=0; x < tStopList2.size(); x++) {
                     Trip tmpTripStop = findTripInfo.get(tStopList2.get(x).getTrip());
@@ -199,9 +260,9 @@ public class TimeTableActivity extends AppCompatActivity {
             return null;
         }
 
-        protected void onProgressUpdate(){
-        }
-
+        /**
+         * Push completed list of Trip objects to the view(XML) adapter to output a list of Trip object accordingly.
+         */
         @Override
         protected void onPostExecute(Void v){
 
@@ -224,4 +285,31 @@ public class TimeTableActivity extends AppCompatActivity {
 
     }
 
+
+    /**
+     * This method is called to establish HTTP request to StopTimesByStopId API for a list of bus times table of a particular bus stop number
+     * @param busStopNo String value of bus stop number
+     * @return return a string value of Json data
+     */
+    public String stopTimesByStopIdAPI(String busStopNo){
+        StringBuilder JsonString = new StringBuilder();
+        HttpURLConnection conn;
+        try {
+            //API call request, return JSON string of data
+            URL url = new URL("https://api.at.govt.nz/v1/gtfs/stopTimes/stopId/" + busStopNo + "?api_key=" + getResources().getString(R.string.at_apis_key));
+            conn = (HttpURLConnection) url.openConnection();
+            conn.connect();
+            InputStream stream = new BufferedInputStream(conn.getInputStream());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                JsonString.append(line);
+            }
+        }catch(Exception e){
+            return null;
+        }
+
+        return JsonString.toString();
+    }
 }
