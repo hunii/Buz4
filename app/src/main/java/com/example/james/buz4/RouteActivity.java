@@ -43,7 +43,7 @@ import model.Shape;
 import model.Stop;
 
 /**
- * Created by Joshua Kim on 3/09/2016.
+ * Created by Taehyun Kim on 3/09/2016.
  */
 public class RouteActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -88,7 +88,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         mMap.getUiSettings().setTiltGesturesEnabled(false);
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
-
 
     }
 

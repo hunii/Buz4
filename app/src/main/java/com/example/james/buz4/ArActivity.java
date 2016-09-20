@@ -1,7 +1,7 @@
 package com.example.james.buz4;
 
 /**
- * Created by Joshua Kim on 6/09/2016.
+ * Created by Taehyun Kim on 6/09/2016.
  */
 /*
 public class ArActivity extends FragmentActivity implements SurfaceHolder.Callback {

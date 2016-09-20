@@ -85,7 +85,7 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
 
         // Init location
         LatLng initPoint = new LatLng(-36.8524, 174.7644); // AUT WT Building
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
     }
 
     @Override
@@ -137,12 +137,8 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         @Override
         public void onLocationChanged(Location location) {
             mLastLocation = location;
-
             curLat = location.getLatitude();
             curLog = location.getLongitude();
-            //Log.w(TAG, "========== onLocationChanged curLat========22222222222222==" + curLat);
-            //Log.w(TAG, "========== onLocationChanged curLog========2222222222222==" + curLog);
-
         }
 
         @Override
@@ -163,7 +159,7 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.w(TAG, "====================onCreateOptionsMenu===================");
+        //Log.w(TAG, "====================onCreateOptionsMenu===================");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         return true;
