@@ -16,5 +16,40 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="24dp"
-        android:text="\nPlease add your favourite stops or bus numbers!" />
+        android:text="\nPlease add your favourite stops or bus numbers!"
+        android:layout_below="@+id/searchText"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/textView3" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="7"
+        android:inputType="number"
+        android:id="@+id/searchText"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Search:"
+        android:id="@+id/textView2"
+        android:textColor="#963838"
+        android:textAlignment="textStart"
+        android:textSize="25dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Search"
+        android:id="@+id/searchButton"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/searchText"
+        android:onClick="searchButtonOnClick" />
+
+
 </RelativeLayout>

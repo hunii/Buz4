@@ -1,15 +1,12 @@
 package com.example.james.buz4;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -26,7 +23,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.StringTokenizer;
 
 import model.ServiceCalendar;
 import model.Trip;
@@ -136,7 +132,7 @@ public class TimeTableActivity extends AppCompatActivity {
                     int seqNo = Integer.parseInt(jsonObject.optString("stop_sequence").toString());
                     String[] charindex = tId.split("_");
                     if((arrTime >= currentTimeinMilli) && (arrTime <= currentTimeinMilli+7200)) {
-                        if (charindex[1].equals("v45.21")) {
+                        if (charindex[1].equals("v46.5")) {
                             boolean today = false;
                             //System.out.println(week+ "   "+serviceHash.size());
                             switch (week) {

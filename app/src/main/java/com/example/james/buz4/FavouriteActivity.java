@@ -3,16 +3,19 @@ package com.example.james.buz4;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 
 /**
  * Created by Joshua Kim on 9/09/2016.
@@ -102,5 +105,19 @@ public class FavouriteActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void searchButtonOnClick(View V){
+        EditText searchText = (EditText) findViewById(R.id.searchText);
+        Button searchButton = (Button) findViewById(R.id.searchButton);
+        Log.w("%%%%%%%%%%%%", ""+"NO ERROR1111         "+Integer.parseInt(searchText.getText().toString()));
+
+        Intent intent = new Intent(FavouriteActivity.this, TimeTableActivity.class); // Bus stop list
+        try {
+            intent.putExtra("busStopNo", Integer.parseInt(searchText.getText().toString()));
+        }catch(Exception e){
+            Log.w("%%%%%%%%%%%%", ""+e+"         "+searchButton.getText());
+        }
+        startActivity(intent);
     }
 }

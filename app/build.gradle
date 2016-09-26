@@ -27,11 +27,8 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     // Required -- JUnit 4 framework
     testCompile 'junit:junit:4.12'
-<<<<<<< 138213457f1780ecd4af9abbb84fc244cfad1e18
-=======
     // Optional -- Mockito framework
     testCompile 'org.mockito:mockito-core:1.10.19'
->>>>>>> Time table activity written, added new class ServiceCalendar, added new txt file containing weekday service time
     testCompile 'org.json:json:20140107'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:design:23.1.1'
