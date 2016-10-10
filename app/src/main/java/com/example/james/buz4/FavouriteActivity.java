@@ -1,16 +1,18 @@
 package com.example.james.buz4;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,26 +25,24 @@ import android.widget.EditText;
 public class FavouriteActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String TAG = "FavouriteActivity";
+
+    final Context context = this;
+    private Button button;
+    private EditText result;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        getSupportActionBar().setSubtitle("Favourites");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        //drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -87,19 +87,20 @@ public class FavouriteActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.mFavourites) {
+        if (id == R.id.mFavourites) { // Favourite
             Intent intent = new Intent(FavouriteActivity.this, FavouriteActivity.class);
             startActivity(intent);
-        } else if (id == R.id.mFindStop) {
+        } else if (id == R.id.mFindStop) { // Find a Stop
             Intent intent = new Intent(FavouriteActivity.this, FindStopsActivity.class);
             startActivity(intent);
-        } else if (id == R.id.mViewRoutes) {
-            Intent intent = new Intent(FavouriteActivity.this, RouteActivity.class);
+        } else if (id == R.id.mViewRoutes) { // View routes
+            routeDialog();
+        } else if (id == R.id.mFeedback) { // Feedback
+            Intent intent = new Intent(FavouriteActivity.this, FeedbackActivity.class);
             startActivity(intent);
-        } else if (id == R.id.mFeedback) {
-
-        } else if (id == R.id.mReference) {
-
+        } else if (id == R.id.mReference) { // References
+            Intent intent = new Intent(FavouriteActivity.this, ReferenceActivity.class);
+            startActivity(intent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -107,14 +108,53 @@ public class FavouriteActivity extends AppCompatActivity
         return true;
     }
 
+    public void routeDialog(){
+        // get prompts.xml view
+        LayoutInflater li = LayoutInflater.from(context);
+        View routeView = li.inflate(R.layout.route_search, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(routeView);
+
+        final EditText userInput = (EditText) routeView.findViewById(R.id.routeSearchInput);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,int id) {
+                            // get user input and set it to result
+                            Intent intent = new Intent(FavouriteActivity.this, RouteActivity.class);
+                            intent.putExtra("search_type", "menuRoute");
+                            intent.putExtra("trip_id", userInput.getText().toString());
+                            startActivity(intent);
+                        }
+                    })
+                .setNegativeButton("Cancel",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,int id) {
+                            dialog.cancel();
+                        }
+                    });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
     public void searchButtonOnClick(View V){
         EditText searchText = (EditText) findViewById(R.id.searchText);
         Button searchButton = (Button) findViewById(R.id.searchButton);
-        Log.w("%%%%%%%%%%%%", ""+"NO ERROR1111         "+Integer.parseInt(searchText.getText().toString()));
 
         Intent intent = new Intent(FavouriteActivity.this, TimeTableActivity.class); // Bus stop list
         try {
             intent.putExtra("busStopNo", Integer.parseInt(searchText.getText().toString()));
+            intent.putExtra("busStopAddr", "");
         }catch(Exception e){
             Log.w("%%%%%%%%%%%%", ""+e+"         "+searchButton.getText());
         }

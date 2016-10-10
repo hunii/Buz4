@@ -24,8 +24,9 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="7"
+        android:ems="5"
         android:inputType="number"
+        android:hint="ex) 7086"
         android:id="@+id/searchText"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
@@ -34,7 +35,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Search:"
+        android:text="Bus Stop: "
         android:id="@+id/textView2"
         android:textColor="#963838"
         android:textAlignment="textStart"
@@ -46,10 +47,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Search"
+        android:shadowColor="#6ebfe2"
         android:id="@+id/searchButton"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/searchText"
         android:onClick="searchButtonOnClick" />
-
-
 </RelativeLayout>

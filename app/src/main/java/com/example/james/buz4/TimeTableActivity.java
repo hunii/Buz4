@@ -3,11 +3,15 @@ package com.example.james.buz4;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,10 +37,10 @@ import model.TripStopAdapter;
  *This class represent activity to show the lists of bus time table for a particular bus stop.
  *
  * Developed by James Joung
- * Version Updated: 14 Sep 2016
+ * Version Updated: 06 Oct 2016
  */
 
-public class TimeTableActivity extends AppCompatActivity {
+public class TimeTableActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = "TimeTableActivity";
     private String fileNameTrip = "at_bus_trips.txt";
     private String fileNameCalendar = "calendar.txt";
@@ -44,13 +48,89 @@ public class TimeTableActivity extends AppCompatActivity {
     private InputStreamReader iStreamReader = null;
     private BufferedReader buffReader = null;
 
+    private ArrayList<TripStop> CurrentListOfTimes = new ArrayList<TripStop>();
+    private String weekofToday;
+
+    private SwipeRefreshLayout swipeContainer;
+    private ListView listView;
+    private RelativeLayout errorMessageLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Stop No. "+getIntent().getSerializableExtra("busStopNo").toString());
+        getSupportActionBar().setSubtitle(getIntent().getSerializableExtra("busStopAddr").toString());
+
+        listView = (ListView) findViewById(R.id.listview_tripstop);
+        errorMessageLayout = (RelativeLayout)findViewById(R.id.errorMessageLayout);
+
+        swipeContainer = (SwipeRefreshLayout)findViewById(R.id.swipeContainer);
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
+        swipeContainer.setOnRefreshListener(this);
+
+        //Log.w("Intent value checking: ",""+getIntent().getSerializableExtra("busStopNo").toString());
         new stopTimesByStopId().execute(getIntent().getSerializableExtra("busStopNo").toString());
     }
+
+    /**
+     * Handler that handle the changes during the refresh of list content and inject new list of contents to list view
+     */
+    Handler handler = new Handler(){
+        public void handleMessage(android.os.Message msg) {
+            if(CurrentListOfTimes.size() != 0) {
+                int currentTimeinMilli = getCurrentTime();
+
+                for (int i = 0; i < CurrentListOfTimes.size(); i++)
+                    if (CurrentListOfTimes.get(i).getArrival_Time() < currentTimeinMilli)
+                        CurrentListOfTimes.remove(i);
+
+                TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(), CurrentListOfTimes);
+                listView.setAdapter(tripAdap);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Intent intent = new Intent(TimeTableActivity.this, RouteActivity.class); // Bus stop list
+                        intent.putExtra("trip_id", CurrentListOfTimes.get(i).getTrip());
+                        startActivity(intent);
+                    }
+                });
+            }else{
+                setErrorMsg();
+            }
+
+            swipeContainer.postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(),"Refreshed", Toast.LENGTH_SHORT).show();
+                    swipeContainer.setRefreshing(false);
+                }
+            }, 1000);
+        };
+    };
+
+    /**
+     * Override the SwipeRefresh onFresh method
+     */
+    @Override
+    public void onRefresh() {
+        swipeContainer.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                swipeContainer.setRefreshing(true);
+                handler.sendEmptyMessage(0);
+            }
+        }, 1000);
+    }
+
 
     /**
      * This inner class is a thread that runs a network connection to call an API for Json date
@@ -60,9 +140,7 @@ public class TimeTableActivity extends AppCompatActivity {
         HashMap<String, ServiceCalendar> serviceHash = new HashMap<String, ServiceCalendar>();
 
         @Override
-        protected void onPreExecute(){
-        }
-
+        protected void onPreExecute(){}
         /**
          * This method establishes HTTP connection to request Json data from API
          * @param params represnts string value of bus stop number
@@ -82,31 +160,23 @@ public class TimeTableActivity extends AppCompatActivity {
                 while ((rLine = buffReader.readLine()) != null) {
                     String[] lines = rLine.split(",");
                     ServiceCalendar sc = new ServiceCalendar(lines[0]);
-                    if(lines[3].equals("1")){
+                    if(lines[3].equals("1"))
                         sc.Mon = true;
-                    }
-                    if(lines[4].equals("1")){
+                    if(lines[4].equals("1"))
                         sc.Tue = true;
-                    }
-                    if(lines[5].equals("1")){
+                    if(lines[5].equals("1"))
                         sc.Wed = true;
-                    }
-                    if(lines[6].equals("1")){
+                    if(lines[6].equals("1"))
                         sc.Thu = true;
-                    }
-                    if(lines[7].equals("1")){
+                    if(lines[7].equals("1"))
                         sc.Fri = true;
-                    }
-                    if(lines[8].equals("1")){
+                    if(lines[8].equals("1"))
                         sc.Sat = true;
-                    }
-                    if(lines[9].equals("1")){
+                    if(lines[9].equals("1"))
                         sc.Sun = true;
-                    }
                     serviceHash.put(lines[0], sc);
                 }
                 buffReader.close();
-
 
                 Log.w(TAG, "----------------START OF API CALL");
                 //API calling Method
@@ -118,11 +188,7 @@ public class TimeTableActivity extends AppCompatActivity {
                 //Get the instance of JSONArray that contains JSONObjects
                 JSONArray jsonArray = jsonRootObject.optJSONArray("response");
 
-                long currentTime = System.currentTimeMillis();
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(currentTime);
-                String week =  calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US);
-                int currentTimeinMilli = (calendar.get(Calendar.HOUR_OF_DAY)*3600) + (calendar.get(Calendar.MINUTE)*60) + calendar.get(Calendar.SECOND);
+                int currentTimeinMilli = getCurrentTime();
                 //Iterate the jsonArray and print the info of JSONObjects
                 for(int i=0; i < jsonArray.length(); i++) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -135,7 +201,7 @@ public class TimeTableActivity extends AppCompatActivity {
                         if (charindex[1].equals("v46.5")) {
                             boolean today = false;
                             //System.out.println(week+ "   "+serviceHash.size());
-                            switch (week) {
+                            switch (weekofToday) {
                                 case "Mon":
                                     if (serviceHash.get(tId).Mon)
                                         today = true;
@@ -167,20 +233,12 @@ public class TimeTableActivity extends AppCompatActivity {
                             }
                             if (today) {
                                 tStopList.add(new TripStop(tId, arrTime, seqNo));
-
                             }
                         }
                     }
-
-
                 }
                 Collections.sort(tStopList);
-
-            }catch(Exception e){
-                Log.w(TAG, "-------------------no network---------------"+e+e.getCause());
-            }finally{
-                //conn.disconnect();
-            }
+            }catch(Exception e){Log.w(TAG, "-------------------no network---------------"+e+e.getCause());}
             return null;
         }
 
@@ -206,8 +264,7 @@ public class TimeTableActivity extends AppCompatActivity {
 
 
         @Override
-        protected void onPreExecute(){
-        }
+        protected void onPreExecute(){}
 
         /**
          * Bufferreading trip_file to match with the returned list of Trip objects to add Bus number and destination
@@ -222,24 +279,19 @@ public class TimeTableActivity extends AppCompatActivity {
                 iStream = getResources().getAssets().open(fileNameTrip);
                 iStreamReader = new InputStreamReader(iStream);
                 buffReader = new BufferedReader(iStreamReader);
-                String rLine = buffReader.readLine();
+                String rLine;
 
                 while ((rLine = buffReader.readLine()) != null) {
                     String[] lines = rLine.split(",");
                     String route_id = lines[1];
                     String bus_num = route_id.substring(0, 3);
-                    String direction_id = lines[2];
                     String trip_headsign = lines[3];
-                    String shape_id = lines[4];
-                    String service_id = lines[5];
                     String trip_id = lines[6];
                     Trip route = new Trip(trip_id,route_id,bus_num,trip_headsign);
                     tripList.add(route);
                     findTripInfo.put(trip_id, route);
                 }
                 buffReader.close();
-
-
 
                 for(int x=0; x < tStopList2.size(); x++) {
                     Trip tmpTripStop = findTripInfo.get(tStopList2.get(x).getTrip());
@@ -248,11 +300,7 @@ public class TimeTableActivity extends AppCompatActivity {
                     tStopList2.get(x).setDestination(tmpTripStop.getTrip_headSign());
                     tStopList2.get(x).setBusNo(roudId.substring(0, 3));
                 }
-
-
-            }catch(Exception e){
-                e.getCause();
-            }
+            }catch(Exception e){e.getCause();}
             return null;
         }
 
@@ -261,26 +309,35 @@ public class TimeTableActivity extends AppCompatActivity {
          */
         @Override
         protected void onPostExecute(Void v){
+            CurrentListOfTimes = tStopList2;
+            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+            //Inject list data into list view
+            if(tStopList2.size() != 0) {
+                TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(), tStopList2);
 
-            ListView listView = (ListView) findViewById(R.id.listview_tripstop);
-            TripStopAdapter tripAdap = new TripStopAdapter(getApplicationContext(), tStopList2);
+                listView.setAdapter(tripAdap);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            listView.setAdapter(tripAdap);
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Intent intent = new Intent(TimeTableActivity.this, RouteActivity.class); // Bus stop list
-                    intent.putExtra("trip_id", tStopList2.get(i).getTrip());
-                    startActivity(intent);
-                    //Toast.makeText(getApplicationContext(),"Clicked id of "+ view.getTag(), Toast.LENGTH_SHORT).show();
-                }
-            });
-
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Intent intent = new Intent(TimeTableActivity.this, RouteActivity.class); // Bus stop list
+                        intent.putExtra("search_type", "timeTableRoute");
+                        intent.putExtra("trip_id", tStopList2.get(i).getTrip());
+                        startActivity(intent);
+                    }
+                });
+            }else{
+                setErrorMsg();
+            }
         }
-
     }
 
+
+    public void setErrorMsg(){
+        swipeContainer.setVisibility(View.GONE);
+        listView.setVisibility(View.GONE);
+        errorMessageLayout.setVisibility(View.VISIBLE);
+    }
 
     /**
      * This method is called to establish HTTP request to StopTimesByStopId API for a list of bus times table of a particular bus stop number
@@ -302,10 +359,24 @@ public class TimeTableActivity extends AppCompatActivity {
             while ((line = reader.readLine()) != null) {
                 JsonString.append(line);
             }
-        }catch(Exception e){
-            return null;
-        }
+        }catch(Exception e){return null;}
 
         return JsonString.toString();
     }
+
+    /**
+     * Get current time in milliseconds
+     * @return integer value of current time in milliseconds
+     */
+    public int getCurrentTime(){
+        long currentTime = System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentTime);
+        weekofToday =  calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US);
+        int currentTimeinMilli = (calendar.get(Calendar.HOUR_OF_DAY)*3600) + (calendar.get(Calendar.MINUTE)*60) + calendar.get(Calendar.SECOND);
+        System.out.println("CURRENT TIME NOW :  "+ currentTimeinMilli);
+
+        return currentTimeinMilli;
+    }
+
 }

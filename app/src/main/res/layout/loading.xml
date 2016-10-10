@@ -39,7 +39,7 @@
 			android:focusableInTouchMode="true"
 			android:textColor="#FFFFFF"
 			android:textSize="12sp"
-			android:text="＠KMSHACK"
+			android:text="Now Loading..."
 			android:textStyle="bold"
 			android:shadowColor="#666666"
 			android:shadowDx="2"

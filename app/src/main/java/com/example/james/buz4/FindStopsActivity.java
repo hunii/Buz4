@@ -90,12 +90,11 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public void onInfoWindowClick (Marker marker) {
-        Log.w(TAG, "onInfoWindowClick===================================");
         marker.showInfoWindow();
         Intent intent = new Intent(FindStopsActivity.this, TimeTableActivity.class); // Bus stop list
-        //Intent intent = new Intent(FindStopsActivity.this, RouteActivity.class); // Bus route
-        //Intent intent = new Intent(FindStopsActivity.this, ArActivity.class); // AR
         intent.putExtra("busStopNo", marker.getTitle());
+        intent.putExtra("busStopAddr", marker.getSnippet());
+
         startActivity(intent);
     }
 
@@ -111,16 +110,16 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
 
     @Override
     public void onConnected(Bundle bundle) {
-        Log.w(TAG, "========== onConnected ==========");
-/*        mLocationRequest = new LocationRequest();
+
+        mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        if (ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)
+        /*if (ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        }
-*/
+        }*/
+
     }
 
     @Override

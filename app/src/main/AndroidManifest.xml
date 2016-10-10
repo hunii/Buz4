@@ -42,7 +42,13 @@
             android:configChanges="keyboardHidden|orientation" />
         <activity
             android:name=".TimeTableActivity"
+            android:label="@string/timetable_subtitle"
+            android:parentActivityName=".FindStopsActivity"
             android:configChanges="keyboardHidden|orientation">
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".FindStopsActivity" />
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
@@ -56,6 +62,12 @@
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>
         </activity>
-
+        <activity
+            android:name=".ReferenceActivity"
+            android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

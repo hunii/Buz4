@@ -10,4 +10,19 @@
     android:paddingRight="16dp"
     android:paddingTop="16dp"
     tools:context="com.example.james.buz4.RouteActivity">
+
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/map"
+        android:gravity="center" >
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:id="@+id/progressBar" />
+
+    </RelativeLayout>
 </fragment>

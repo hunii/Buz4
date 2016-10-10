@@ -15,18 +15,18 @@
             android:id="@+id/mViewRoutes"
             android:icon="@drawable/ic_menu_slideshow"
             android:title="View routes"/>
+        <item
+            android:id="@+id/mFeedback"
+            android:icon="@drawable/ic_menu_share"
+            android:title="Feedback"/>
     </group>
 
     <item android:title="General">
         <menu>
             <item
-                android:id="@+id/mFeedback"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Feedback"/>
-            <item
                 android:id="@+id/mReference"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Reference" />
+                android:title="References" />
         </menu>
     </item>
 

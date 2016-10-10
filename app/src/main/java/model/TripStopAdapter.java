@@ -1,7 +1,6 @@
 package model;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -54,7 +53,7 @@ public class TripStopAdapter extends BaseAdapter {
         int sHour = busTimeinMilliSec / 3600;
         int sMinute = (busTimeinMilliSec / 60) % 60;
         int sSecond = busTimeinMilliSec % 60;
-        Log.w("TripStopAdapter", "======Bus arrive time)))   sHour===" +sHour+ ", sMinute=====" +sMinute+ ", sSecond=====" +sSecond+ ", sTIME=====" +busTimeinMilliSec);
+        //Log.w("TripStopAdapter", "======Bus arrive time)))   sHour===" +sHour+ ", sMinute=====" +sMinute+ ", sSecond=====" +sSecond+ ", sTIME=====" +busTimeinMilliSec);
 
         //Current time into h/m/s format
         long currentTime = System.currentTimeMillis();
@@ -64,7 +63,7 @@ public class TripStopAdapter extends BaseAdapter {
         int currentMin = calendar.get(Calendar.MINUTE);
         int currentSec = calendar.get(Calendar.SECOND);
         int currentTimeinMilliSeconds = currentHr * (60 * 60) + currentMin * 60 + currentSec * 1;
-        Log.w("TripStopAdapter", "======CUrrent arrive time)))   cHour===" +currentHr+ ", cMinute=====" +currentMin+ ", cSecond=====" +currentSec+ ", cTIME=====" +currentTimeinMilliSeconds);
+        //Log.w("TripStopAdapter", "======CUrrent arrive time)))   cHour===" +currentHr+ ", cMinute=====" +currentMin+ ", cSecond=====" +currentSec+ ", cTIME=====" +currentTimeinMilliSeconds);
 
         //Zero decimal placing of seconds to minutes
         if (sSecond >= 30)

@@ -1,5 +1,6 @@
 package com.example.james.buz4;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -9,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -43,14 +45,19 @@ import model.Shape;
 import model.Stop;
 
 /**
- * Created by Taehyun Kim on 3/09/2016.
+ *This class represent activity to show a particular bus route on the map.
+ *
+ * Developed by Taehyun Kim
+ * Version Updated: 03 Sep 2016
  */
 public class RouteActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
+        GoogleMap.OnInfoWindowClickListener,
         GoogleApiClient.OnConnectionFailedListener {
 
     protected double curLat, curLog;
     public static final String TAG = "RouteActivity";
+    private String fileNameTrip = "at_bus_trips.txt";
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
@@ -61,14 +68,24 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
     LatLngBounds.Builder builder;
     CameraUpdate cUpdate;
 
-    public String tripId;
+    private InputStream iStream = null;
+    private InputStreamReader iStreamReader = null;
+    private BufferedReader buffReader = null;
+
+    public String search_type, tripId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route);
-        tripId = getIntent().getSerializableExtra("trip_id").toString();
-        //Log.w(TAG, "=============tripId==========="+tripId);
+        search_type = getIntent().getSerializableExtra("search_type").toString();
+        if(search_type.equals("timeTableRoute")){
+            tripId = getIntent().getSerializableExtra("trip_id").toString();
+        } else if(search_type.equals("menuRoute")){
+            tripId = findTripNo(getIntent().getSerializableExtra("trip_id").toString());
+        }
+        //Log.w(TAG, "============search_type======="+search_type);
+        //Log.w(TAG, "============tripId======="+tripId);
 
         // Make line of the bus route
         new shapeByTripId().execute(tripId);
@@ -87,8 +104,18 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setTiltGesturesEnabled(false);
         mMap.setMyLocationEnabled(true);
+        mMap.setOnInfoWindowClickListener(this);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
+    }
+
+    @Override
+    public void onInfoWindowClick (Marker marker) {
+        marker.showInfoWindow();
+        Intent intent = new Intent(RouteActivity.this, TimeTableActivity.class); // Bus stop list
+        intent.putExtra("busStopNo", marker.getTitle());
+        intent.putExtra("busStopAddr", marker.getSnippet());
+        startActivity(intent);
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -103,7 +130,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnected(Bundle bundle) {
-        Log.w(TAG, "========== onConnected ==========");
+
     }
 
     @Override
@@ -338,10 +365,15 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
             List<Marker> markersList = new ArrayList<Marker>();
             // View Bus Route
             for(int i=0; i < tripStops.size(); i++) {
+                findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+                if(tripStops.size() == 0){
+                    findViewById(R.id.map).setVisibility(View.INVISIBLE);
+                    //findViewById(R.id.errorMessageLayout).setVisibility(View.VISIBLE);
+                }
                 LatLng pTripStops = new LatLng(tripStops.get(i).getStop_Lat(), tripStops.get(i).getStop_Lon());
 
                 Marker showAllMarkers = mMap.addMarker(new MarkerOptions()
-                        .title(i+1+". "+Integer.toString(tripStops.get(i).getStop_Id()))
+                        .title(Integer.toString(tripStops.get(i).getStop_Id()))
                         .snippet(tripStops.get(i).getStop_Name())
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
                         .position(pTripStops));
@@ -367,7 +399,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
                 public void onMapLoaded() {
                     /**set animated zoom camera into map*/
                     mMap.animateCamera(cUpdate);
-
                 }
             });
         }
@@ -383,14 +414,47 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         lat2 = Math.toRadians(lat2);
         lon1 = Math.toRadians(lon1);
 
-        double Bx = Math.cos(lat2) * Math.cos(dLon);
-        double By = Math.cos(lat2) * Math.sin(dLon);
-        double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + Bx) * (Math.cos(lat1) + Bx) + By * By));
-        double lon3 = lon1 + Math.atan2(By, Math.cos(lat1) + Bx);
+        double midXmath = Math.cos(lat2) * Math.cos(dLon);
+        double midYmath = Math.cos(lat2) * Math.sin(dLon);
+        double lat3 = Math.atan2(Math.sin(lat1) + Math.sin(lat2), Math.sqrt((Math.cos(lat1) + midXmath) * (Math.cos(lat1) + midXmath) + midYmath * midYmath));
+        double lon3 = lon1 + Math.atan2(midYmath, Math.cos(lat1) + midXmath);
 
         LatLng gMidLatLon = new LatLng(Math.toDegrees(lat3), Math.toDegrees(lon3));
         // Move to Mid-Point
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 11));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 10));
+    }
+
+    /**
+     * Find one of a Trip ID in Route using bus number
+     * @return Trip ID
+     */
+    public String findTripNo(String tBusNo){
+        String fTripNo = "";
+        boolean fTripStop = false;
+
+        try{
+            iStream = getResources().getAssets().open(fileNameTrip);
+            iStreamReader = new InputStreamReader(iStream);
+            buffReader = new BufferedReader(iStreamReader);
+            String rLine;
+
+            while ((rLine = buffReader.readLine()) != null && !fTripStop) {
+                String[] lines = rLine.split(",");
+                String bus_num = lines[1].substring(0, 3);
+                if(bus_num.equals(tBusNo)){
+                    fTripNo = lines[6];
+                    fTripStop = true;
+                }
+            }
+            buffReader.close();
+
+        }catch(Exception e){
+            Log.w(TAG, e.getCause());
+        }finally{
+            //conn.disconnect();
+        }
+
+        return fTripNo;
     }
 
 }
