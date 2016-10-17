@@ -16,6 +16,10 @@
             android:icon="@drawable/ic_menu_slideshow"
             android:title="View routes"/>
         <item
+            android:id="@+id/mAtHop"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="AT HOP"/>
+        <item
             android:id="@+id/mFeedback"
             android:icon="@drawable/ic_menu_share"
             android:title="Feedback"/>

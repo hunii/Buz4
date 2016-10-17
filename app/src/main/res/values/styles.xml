@@ -7,6 +7,11 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+    <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:textColorPrimary">#828282</item>
+        <item name="android:background">#fafafa</item>
+        <item name="colorAccent">#009180</item>
+    </style>
 
     <style name="title">
         <item name="android:maxLines">1</item>

@@ -9,4 +9,12 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_settings">Settings</string>
+
+    <string name="post_feedback_posting">Sending your feedback </string>
+    <string name="post_feedback_title">Send your feedback</string>
+    <string name="post_feedback_success">Successfully sent:)</string>
+    <string name="post_feedback_failed">Sorry, failed to send your feedback</string>
+
+    <string name="error_title">Searching Error</string>
+    <string name="error_message">Can not find any result!</string>
 </resources>

@@ -9,6 +9,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -441,9 +442,14 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
             while ((rLine = buffReader.readLine()) != null && !fTripStop) {
                 String[] lines = rLine.split(",");
                 String bus_num = lines[1].substring(0, 3);
-                if(bus_num.equals(tBusNo)){
-                    fTripNo = lines[6];
-                    fTripStop = true;
+                try {
+                    if (bus_num.equals(tBusNo)) {
+                        fTripNo = lines[6];
+                        fTripStop = true;
+                    }
+                }catch(Exception e){
+                    Log.w(TAG, "================no route founded==========="+e.getCause());
+                    showErrMessage();
                 }
             }
             buffReader.close();
@@ -455,6 +461,14 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         }
 
         return fTripNo;
+    }
+
+    public void showErrMessage(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(RouteActivity.this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle(R.string.error_title);
+        builder.setMessage(R.string.error_message);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.show();
     }
 
 }

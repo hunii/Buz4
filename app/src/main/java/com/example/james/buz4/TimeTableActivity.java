@@ -41,6 +41,7 @@ import model.TripStopAdapter;
  */
 
 public class TimeTableActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+
     private static final String TAG = "TimeTableActivity";
     private String fileNameTrip = "at_bus_trips.txt";
     private String fileNameCalendar = "calendar.txt";
@@ -97,6 +98,7 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                         Intent intent = new Intent(TimeTableActivity.this, RouteActivity.class); // Bus stop list
+                        intent.putExtra("search_type", "timeTableRoute");
                         intent.putExtra("trip_id", CurrentListOfTimes.get(i).getTrip());
                         startActivity(intent);
                     }
@@ -378,5 +380,4 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
 
         return currentTimeinMilli;
     }
-
 }

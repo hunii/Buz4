@@ -28,30 +28,31 @@ public class FavouriteActivity extends AppCompatActivity
     public static final String TAG = "FavouriteActivity";
 
     final Context context = this;
-    private Button button;
-    private EditText result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setContentView(R.layout.activity_favourite);
+
+        initSlideBar();
+    }
+
+    public void initSlideBar(){
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_favourite);
         setSupportActionBar(toolbar);
         getSupportActionBar().setSubtitle("Favourites");
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        //drawer.setDrawerListener(toggle);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_favourite);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_favourite);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_favourite);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -98,12 +99,15 @@ public class FavouriteActivity extends AppCompatActivity
         } else if (id == R.id.mFeedback) { // Feedback
             Intent intent = new Intent(FavouriteActivity.this, FeedbackActivity.class);
             startActivity(intent);
+        } else if (id == R.id.mAtHop) { // AT HOP
+            Intent intent = new Intent(FavouriteActivity.this, WebserviceActivity.class);
+            startActivity(intent);
         } else if (id == R.id.mReference) { // References
             Intent intent = new Intent(FavouriteActivity.this, ReferenceActivity.class);
             startActivity(intent);
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_favourite);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

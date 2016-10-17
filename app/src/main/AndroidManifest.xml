@@ -10,8 +10,6 @@
     <uses-permission android:name="com.example.james.buz4.permission.READ_GSERVICES"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera2" />
 
     <application
         android:allowBackup="true"
@@ -19,7 +17,7 @@
         android:label="@string/app_name"
         android:largeHeap="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:screenOrientation="portrait">
 
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"/>
@@ -29,45 +27,54 @@
 
         <activity
             android:name=".FavouriteActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FindStopsActivity"
-            android:configChanges="keyboardHidden|orientation" />
+        <activity
+            android:name=".FindStopsActivity"
+            android:label="Find a Stop"
+            android:parentActivityName=".FavouriteActivity"
+            android:configChanges="keyboardHidden|orientation">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".FavouriteActivity" />
+        </activity>
         <activity
             android:name=".TimeTableActivity"
-            android:label="@string/timetable_subtitle"
+            android:theme="@style/AppTheme"
             android:parentActivityName=".FindStopsActivity"
             android:configChanges="keyboardHidden|orientation">
-            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".FindStopsActivity"/>
+        </activity>
+        <activity android:name=".RouteActivity"
+            android:label="Route"
+            android:parentActivityName=".FindStopsActivity"
+            android:configChanges="keyboardHidden|orientation">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".FindStopsActivity" />
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-            </intent-filter>
         </activity>
-        <activity android:name=".RouteActivity"
-            android:configChanges="keyboardHidden|orientation" />
+        <activity android:name=".WebserviceActivity"
+            android:label="AT HOP"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="keyboardHidden|orientation">
+        </activity>
         <activity
             android:name=".FeedbackActivity"
+            android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="keyboardHidden|orientation">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".ReferenceActivity"
+            android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="keyboardHidden|orientation">
-            <intent-filter>
-                <action android:name="android.intent.action.CREATE_SHORTCUT" />
-            </intent-filter>
         </activity>
     </application>
 </manifest>
