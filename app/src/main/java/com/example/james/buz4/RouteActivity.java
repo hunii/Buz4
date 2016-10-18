@@ -85,8 +85,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         } else if(search_type.equals("menuRoute")){
             tripId = findTripNo(getIntent().getSerializableExtra("trip_id").toString());
         }
-        //Log.w(TAG, "============search_type======="+search_type);
-        //Log.w(TAG, "============tripId======="+tripId);
 
         // Make line of the bus route
         new shapeByTripId().execute(tripId);

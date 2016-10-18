@@ -38,11 +38,8 @@
         <activity
             android:name=".FindStopsActivity"
             android:label="Find a Stop"
-            android:parentActivityName=".FavouriteActivity"
+            android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="keyboardHidden|orientation">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".FavouriteActivity" />
         </activity>
         <activity
             android:name=".TimeTableActivity"

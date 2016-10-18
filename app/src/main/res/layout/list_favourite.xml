@@ -12,19 +12,28 @@
         android:layout_height="40dip"
         android:src="@drawable/buz4_thumbnail"
         android:id="@+id/imageView2" />
-
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+            android:id="@+id/favou_busNo"
+        android:text="1111"
+        android:textSize="28dp"
+        android:textStyle="bold"
+        android:textColor="#7d7d7d"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@id/imageView2"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/favourite_list"
-        android:textSize="25dp"
+        android:textSize="20dp"
         android:textStyle="bold"
-        android:textColor="#000000"
-        android:text="No search results..."
+        android:textColor="#2c2b2b"
+        android:text="FavouriteName"
         android:padding="5dp"
-        android:layout_marginLeft="15dp"
-        android:layout_toRightOf="@id/imageView2"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@id/favou_busNo"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 

@@ -85,7 +85,7 @@ public class TimeTableActivity extends AppCompatActivity
                 android.R.color.holo_red_light);
         swipeContainer.setOnRefreshListener(this);
 
-        //default
+        //Handler for favourite feature
         favouriteStar = (RatingBar)findViewById(R.id.ratingBarFav);
         favAdap = new FavouriteAdapter(this);
         favouriteOn = favAdap.checkIsFavourite(getIntent().getSerializableExtra("busStopNo").toString());

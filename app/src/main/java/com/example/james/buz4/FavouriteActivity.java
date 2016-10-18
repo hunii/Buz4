@@ -22,8 +22,11 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -80,6 +83,12 @@ public class FavouriteActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_favourite);
         navigationView.setNavigationItemSelectedListener(this);
 
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        new favouriteFetch().execute("");
     }
 
     @Override
@@ -204,10 +213,12 @@ public class FavouriteActivity extends AppCompatActivity
     public class favouriteFetch extends AsyncTask<String, Void, Void> {
 
         ArrayList<Favourite> listFav = new ArrayList<Favourite>();
-        FavouriteAdapter favAdap = new FavouriteAdapter(getApplicationContext());;
+        FavouriteAdapter favAdap = new FavouriteAdapter(getApplicationContext());
+        ;
 
         @Override
-        protected void onPreExecute(){}
+        protected void onPreExecute() {
+        }
 
         @Override
         protected Void doInBackground(String... params) {
@@ -220,8 +231,9 @@ public class FavouriteActivity extends AppCompatActivity
 
         @Override
         protected void onPostExecute(Void v) {
-            Log.w(TAG, "----------------INEJCT FAVOURITE !!!!"+listFav.size());
-            ListView favouriteListView = (ListView)findViewById(R.id.listview_favourite);;
+            Log.w(TAG, "----------------INEJCT FAVOURITE !!!!" + listFav.size());
+            ListView favouriteListView = (ListView) findViewById(R.id.listview_favourite);
+            ;
 
             favouriteListView.setAdapter(favAdap);
             favouriteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -235,18 +247,72 @@ public class FavouriteActivity extends AppCompatActivity
                     startActivity(intent);
                 }
             });
-            favouriteListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
+            favouriteListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                 @Override
-                public boolean onItemLongClick(AdapterView<?> arg0, View v,int i, long l) {
-                    Log.e("LONGCLICK Test","in onLongClick:: "+ i);
-                    String str=listFav.get(i).toString();
+                public boolean onItemLongClick(AdapterView<?> arg0, View v, int i, long l) {
+                    Log.e("LONGCLICK Test", "in onLongClick:: " + i);
 
+                    String name = listFav.get(i).getViewName();
+                    final String busNo = listFav.get(i).getBusStopNo();
+
+                    // get prompts.xml views
+                    LayoutInflater li = LayoutInflater.from(context);
+                    View editView = li.inflate(R.layout.favourite_edit, null);
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+                    // set prompts.xml to alertdialog builder
+                    alertDialogBuilder.setView(editView);
+                    final TextView textView = (TextView) editView.findViewById(R.id.edit_fav4);
+                    textView.setText(busNo);
+
+                    final EditText userInput = (EditText) editView.findViewById(R.id.edit_favName);
+                    userInput.setText(name);
+
+                    final CheckBox delCheckBox = (CheckBox) editView.findViewById(R.id.delCheckBox);
+                    // set dialog message
+                    alertDialogBuilder
+                            .setCancelable(true)
+                            .setPositiveButton("Save",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            favAdap.editFavourite(userInput.getText().toString(), busNo);
+                                            Toast.makeText(getApplicationContext(), "Updated !", Toast.LENGTH_SHORT).show();
+                                            dialog.cancel();
+                                            new favouriteFetch().execute("");
+                                        }
+                                    })
+                            .setNeutralButton("Delete",
+                                    null
+                            )
+                            .setNegativeButton("Cancel",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+                    // create alert dialog
+                    final AlertDialog alertDialog = alertDialogBuilder.create();
+
+                    // show it
+                    alertDialog.show();
+                    alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            System.out.println(delCheckBox.isChecked());
+                            if (delCheckBox.isChecked()) {
+                                favAdap.deleteFavourite(busNo);
+                                Toast.makeText(getApplicationContext(), "Deleted !", Toast.LENGTH_SHORT).show();
+                                alertDialog.cancel();
+                                new favouriteFetch().execute("");
+                            } else {
+                                delCheckBox.setText("Confirm");
+                            }
+                        }
+                    });
 
                     return true;
                 }
             });
         }
     }
-
 
 }

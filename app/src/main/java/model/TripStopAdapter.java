@@ -43,11 +43,23 @@ public class TripStopAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         View v = View.inflate(context, R.layout.list_bustime, null);
         TextView busTime = (TextView) v.findViewById(R.id.bus_time);
+        TextView busTime1 = (TextView) v.findViewById(R.id.bus_time1);
+        TextView busTime2 = (TextView) v.findViewById(R.id.bus_time2);
+        TextView busTime3 = (TextView) v.findViewById(R.id.bus_time3);
 
         //Get bus number and destination
         String bNo = mTripStopList.get(i).getBusNo();
         String dest = mTripStopList.get(i).getDestination();
 
+        if(dest != null) {
+            int dstLng = dest.length();
+            System.out.println(dstLng+"              ,.,..,.,.,.,.,.,.");
+            if (dstLng > 10 && dstLng <= 17) {// dest string size between 13 - 17
+                System.out.println(dstLng+"              ,.,..,.,.,.,.,.,."+ busTime2.getTextSize());
+                busTime2.setTextSize(18);
+                System.out.println(dstLng+"              ,.,..,.,.,.,.,.,."+busTime2.getTextSize());
+            }
+        }
         //Bus arriving time into h/m/s format
         int busTimeinMilliSec = mTripStopList.get(i).getArrival_Time();
         int sHour = busTimeinMilliSec / 3600;
@@ -80,14 +92,17 @@ public class TripStopAdapter extends BaseAdapter {
                 vDueTime = "[  *  ]";
             }else{
                 //vDueTime = (sMinute - currentMin) + " m";
-                vDueTime = ("[ "+((busTimeinMilliSec - currentTimeinMilliSeconds)/ 60) % 60) + " m ]";
+                vDueTime = ("["+((busTimeinMilliSec - currentTimeinMilliSeconds)/ 60) % 60) + " m]";
             }
         }else{//If bus times are over 1 hour, due time is blank
             vDueTime = "    ";
         }
 
         //Display bus time table
-        busTime.setText(bNo + "   " + vArriveTime + "   " + dest + "  " + vDueTime+" ");
+        busTime.setText(""+bNo);
+        busTime1.setText(""+vArriveTime);
+        busTime2.setText(""+dest);
+        busTime3.setText(""+vDueTime);
 
         v.setTag(i);
         return v;

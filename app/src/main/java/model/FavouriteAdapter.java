@@ -126,7 +126,7 @@ public class FavouriteAdapter extends BaseAdapter {
                 inputStream.close();
 
                 //Rewrite to File
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileNameFavourite, Context.MODE_APPEND));
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileNameFavourite, Context.MODE_PRIVATE));
                 outputStreamWriter.write(allTexts);
                 outputStreamWriter.close();
 
@@ -156,7 +156,7 @@ public class FavouriteAdapter extends BaseAdapter {
                 inputStream.close();
 
                 //Rewrite to File
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileNameFavourite, Context.MODE_APPEND));
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileNameFavourite, Context.MODE_PRIVATE));
                 outputStreamWriter.write(allTexts);
                 outputStreamWriter.close();
 
@@ -187,9 +187,12 @@ public class FavouriteAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         View v = View.inflate(context, R.layout.list_favourite, null);
+
+        TextView favouriteBusNo = (TextView) v.findViewById(R.id.favou_busNo);
         TextView favourite = (TextView) v.findViewById(R.id.favourite_list);
 
         //Display bus time table
+        favouriteBusNo.setText(mFavouriteList.get(i).getBusStopNo());
         favourite.setText(mFavouriteList.get(i).getViewName());
 
         v.setTag(i);

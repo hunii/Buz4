@@ -1,18 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:padding="5dp"
     android:background="#dbdbdb"
     android:layout_margin="5dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/bus_time"
-        android:textSize="20dp"
-        android:textColor="#000000"
-        android:text="No search results..."/>
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.10">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/bus_time"
+            android:textSize="25dp"
+            android:textColor="#000000"
+            android:text="500"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.15">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bus_time1"
+            android:textSize="25dp"
+            android:textColor="#000000"
+            android:text="00:00"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.35">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bus_time2"
+            android:textSize="25dp"
+            android:textColor="#000000"
+            android:text="Britomart"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="0.13">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bus_time3"
+            android:textSize="20dp"
+            android:textColor="#000000"
+            android:text="[60 m]"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
 
 </LinearLayout>
