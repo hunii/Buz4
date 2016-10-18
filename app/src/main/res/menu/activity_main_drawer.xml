@@ -18,7 +18,7 @@
         <item
             android:id="@+id/mAtHop"
             android:icon="@drawable/ic_menu_slideshow"
-            android:title="AT HOP"/>
+            android:title="Top-Up AT HOP"/>
         <item
             android:id="@+id/mFeedback"
             android:icon="@drawable/ic_menu_share"

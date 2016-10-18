@@ -35,15 +35,19 @@
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
             android:paddingTop="@dimen/activity_vertical_margin"
+            android:clickable="true"
+            android:focusableInTouchMode="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="24dp"
-                android:text="\nPlease add your favourite stops or bus numbers!"
+                android:textStyle="bold|italic"
+                android:text="Favourites"
+                android:paddingLeft="15dp"
+                android:paddingTop="15dp"
                 android:layout_below="@+id/searchText"
-                android:layout_alignParentEnd="true"
                 android:id="@+id/textView3" />
 
             <EditText
@@ -54,7 +58,7 @@
                 android:hint="ex) 7086"
                 android:id="@+id/searchText"
                 android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -77,6 +81,17 @@
                 android:layout_alignParentTop="true"
                 android:layout_toEndOf="@+id/searchText"
                 android:onClick="searchButtonOnClick" />
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/listview_favourite"
+                android:divider="#fff"
+                android:dividerHeight="10dp"
+                android:layout_below="@+id/textView3"
+                android:text="Now Loading..."
+                android:layout_margin="10dp"/>
+
         </RelativeLayout>
 
     </android.support.design.widget.CoordinatorLayout>

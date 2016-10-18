@@ -6,10 +6,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RatingBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -28,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 
+import model.FavouriteAdapter;
 import model.ServiceCalendar;
 import model.Trip;
 import model.TripStop;
@@ -40,7 +46,8 @@ import model.TripStopAdapter;
  * Version Updated: 06 Oct 2016
  */
 
-public class TimeTableActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class TimeTableActivity extends AppCompatActivity
+        implements SwipeRefreshLayout.OnRefreshListener{
 
     private static final String TAG = "TimeTableActivity";
     private String fileNameTrip = "at_bus_trips.txt";
@@ -56,14 +63,17 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
     private ListView listView;
     private RelativeLayout errorMessageLayout;
 
+    private RatingBar favouriteStar;
+    private boolean favouriteOn;
+
+    private FavouriteAdapter favAdap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Stop No. "+getIntent().getSerializableExtra("busStopNo").toString());
-        getSupportActionBar().setSubtitle(getIntent().getSerializableExtra("busStopAddr").toString());
+        initSlideBar();
 
         listView = (ListView) findViewById(R.id.listview_tripstop);
         errorMessageLayout = (RelativeLayout)findViewById(R.id.errorMessageLayout);
@@ -75,8 +85,67 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
                 android.R.color.holo_red_light);
         swipeContainer.setOnRefreshListener(this);
 
+        //default
+        favouriteStar = (RatingBar)findViewById(R.id.ratingBarFav);
+        favAdap = new FavouriteAdapter(this);
+        favouriteOn = favAdap.checkIsFavourite(getIntent().getSerializableExtra("busStopNo").toString());
+        if(favouriteOn){
+            Log.e("check",favouriteOn+".....................");
+            favouriteStar.setIsIndicator(true);
+            favouriteStar.setRating(1);
+        }else{
+            Log.e("check",favouriteOn+".....................");
+            favouriteStar.setIsIndicator(false);
+            favouriteStar.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent event) {
+                    if(favouriteOn){//on red to null
+                    }else{//null to red
+                        if(event.getAction() == MotionEvent.ACTION_UP){
+                            Log.e("Favourite Butn","Clicked Saving on favourite!");
+                            favouriteStar.setRating(1);
+                            favouriteStar.setIsIndicator(true);
+                            favouriteOn = true;
+                            favAdap.addFavourite(getIntent().getSerializableExtra("busStopNo").toString());
+                        }
+                    }
+                    return false;
+                }
+            });
+        }
+
         //Log.w("Intent value checking: ",""+getIntent().getSerializableExtra("busStopNo").toString());
         new stopTimesByStopId().execute(getIntent().getSerializableExtra("busStopNo").toString());
+    }
+
+    public void initSlideBar(){
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_timetable);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Stop No. "+getIntent().getSerializableExtra("busStopNo").toString());
+        getSupportActionBar().setSubtitle(getIntent().getSerializableExtra("busStopAddr").toString());
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        //getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // app icon in action bar clicked; goto parent activity.
+                this.finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     /**
@@ -200,7 +269,7 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
                     int seqNo = Integer.parseInt(jsonObject.optString("stop_sequence").toString());
                     String[] charindex = tId.split("_");
                     if((arrTime >= currentTimeinMilli) && (arrTime <= currentTimeinMilli+7200)) {
-                        if (charindex[1].equals("v46.5")) {
+                        if (charindex[1].equals("v46.25")) {
                             boolean today = false;
                             //System.out.println(week+ "   "+serviceHash.size());
                             switch (weekofToday) {
@@ -361,6 +430,7 @@ public class TimeTableActivity extends AppCompatActivity implements SwipeRefresh
             while ((line = reader.readLine()) != null) {
                 JsonString.append(line);
             }
+            Log.e("sysoutLOG", JsonString.toString());
         }catch(Exception e){return null;}
 
         return JsonString.toString();

@@ -15,6 +15,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -284,6 +285,7 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
                             .position(vBusStops));
                 }
             } // for
+            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
         }
 
     } // class

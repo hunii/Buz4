@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Auckland Bus</string>
     <string name="google_maps_key">AIzaSyCRA-fnBc9Rw9V9EnM84gwxNaJLIk7KKak</string>
-    <string name="at_apis_key">9452a984-1ffd-447b-a86a-2f544e52b718</string>
+    <string name="at_apis_key">4142d924-e90a-4a3d-87c8-9b21a197a7a4</string>
     <string name="menu_setting">Menu</string>
     <string name="previous_page">Back</string>
     <string name="current_location">Current Location</string>

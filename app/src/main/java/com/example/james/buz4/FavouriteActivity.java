@@ -1,8 +1,10 @@
 package com.example.james.buz4;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,8 +18,17 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
+
+import java.util.ArrayList;
+
+import model.Favourite;
+import model.FavouriteAdapter;
 
 /**
  * Created by Joshua Kim on 9/09/2016.
@@ -28,6 +39,10 @@ public class FavouriteActivity extends AppCompatActivity
     public static final String TAG = "FavouriteActivity";
 
     final Context context = this;
+    public static FavouriteAdapter favAdapStatic;
+
+    private EditText searchText;
+    private Button searchButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +50,22 @@ public class FavouriteActivity extends AppCompatActivity
         setContentView(R.layout.activity_favourite);
 
         initSlideBar();
+
+        searchText = (EditText) findViewById(R.id.searchText);
+        searchButton = (Button) findViewById(R.id.searchButton);
+
+        searchText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    hideKeyboard(v);
+                }
+            }
+        });
+        new favouriteFetch().execute("");
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
     }
 
     public void initSlideBar(){
@@ -48,6 +79,7 @@ public class FavouriteActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_favourite);
         navigationView.setNavigationItemSelectedListener(this);
+
     }
 
     @Override
@@ -63,7 +95,7 @@ public class FavouriteActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+        //getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -75,11 +107,11 @@ public class FavouriteActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        //if (id == R.id.action_settings) {
             return true;
-        }
+        //}
 
-        return super.onOptionsItemSelected(item);
+        //return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -152,8 +184,6 @@ public class FavouriteActivity extends AppCompatActivity
     }
 
     public void searchButtonOnClick(View V){
-        EditText searchText = (EditText) findViewById(R.id.searchText);
-        Button searchButton = (Button) findViewById(R.id.searchButton);
 
         Intent intent = new Intent(FavouriteActivity.this, TimeTableActivity.class); // Bus stop list
         try {
@@ -164,4 +194,59 @@ public class FavouriteActivity extends AppCompatActivity
         }
         startActivity(intent);
     }
+
+    public void hideKeyboard(View view) {
+        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+
+    public class favouriteFetch extends AsyncTask<String, Void, Void> {
+
+        ArrayList<Favourite> listFav = new ArrayList<Favourite>();
+        FavouriteAdapter favAdap = new FavouriteAdapter(getApplicationContext());;
+
+        @Override
+        protected void onPreExecute(){}
+
+        @Override
+        protected Void doInBackground(String... params) {
+            //favAdap.deleteTexts();
+            favAdap.fetchNewFavouriteList();
+            listFav = favAdap.getFavList();
+            favAdapStatic = favAdap;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void v) {
+            Log.w(TAG, "----------------INEJCT FAVOURITE !!!!"+listFav.size());
+            ListView favouriteListView = (ListView)findViewById(R.id.listview_favourite);;
+
+            favouriteListView.setAdapter(favAdap);
+            favouriteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    Intent intent = new Intent(FavouriteActivity.this, TimeTableActivity.class); // Bus stop list
+
+                    intent.putExtra("busStopNo", listFav.get(i).getBusStopNo().toString());
+                    intent.putExtra("busStopAddr", "");
+                    startActivity(intent);
+                }
+            });
+            favouriteListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
+                @Override
+                public boolean onItemLongClick(AdapterView<?> arg0, View v,int i, long l) {
+                    Log.e("LONGCLICK Test","in onLongClick:: "+ i);
+                    String str=listFav.get(i).toString();
+
+
+                    return true;
+                }
+            });
+        }
+    }
+
+
 }
