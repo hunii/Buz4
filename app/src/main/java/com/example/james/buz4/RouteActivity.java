@@ -49,7 +49,9 @@ import model.Stop;
  *This class represent activity to show a particular bus route on the map.
  *
  * Developed by Taehyun Kim
- * Version Updated: 03 Sep 2016
+ * Created on 03/09/2016.
+ * Modified version 0.9.0 on 22/oct/2016 (Using text file due to AT web problem)
+ * Modified version 0.9.1 on 24/oct/2016 (Some part of AT web problem has solved on this activity)
  */
 public class RouteActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -59,6 +61,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
     protected double curLat, curLog;
     public static final String TAG = "RouteActivity";
     private String fileNameTrip = "at_bus_trips.txt";
+    private String fileNameStops = "at_bus_stops.txt";
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
@@ -75,6 +78,10 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
     public String search_type, tripId;
 
+    /**
+     * Init map fragment connected to xml
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +104,10 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         handlePermissionsAndGetLocation();
     }
 
+    /**
+     * Enable UI settings, Window information listener and current location mode
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -108,6 +119,11 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
     }
 
+    /**
+     * Enable infomation window on the bus stop
+     * @param marker
+     * @return busStopNo, busStopAddress to timeTableActivity
+     */
     @Override
     public void onInfoWindowClick (Marker marker) {
         marker.showInfoWindow();
@@ -142,6 +158,9 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
     }
 
+    /**
+     * init location listener to retrieve current location
+     */
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -209,6 +228,9 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         }
     }
 
+    /**
+     * Call AT API and connect to each route to make a whole route of selected bus number.
+     */
     class shapeByTripId extends AsyncTask<String, Void, Void> {
         ArrayList<Shape> tripShape = new ArrayList<>();
 
@@ -270,6 +292,14 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
             PolylineOptions lineOptions = new PolylineOptions();
             double sLat = 0.00, sLon = 0.00, eLat = 0.00, eLon = 0.00;
 
+            /**create for loop for get the latLngbuilder from the marker list*/
+            builder = new LatLngBounds.Builder();
+
+            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+            if(tripShape.size() == 0){
+                findViewById(R.id.map).setVisibility(View.INVISIBLE);
+            }
+
             // View Bus Route
             for(int i=0; i < tripShape.size(); i++) {
                 LatLng vBusRoute = new LatLng(tripShape.get(i).getShape_Latitude(), tripShape.get(i).getShape_Longitude());
@@ -286,6 +316,10 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
                 lineOptions.add(vBusRoute);
                 lineOptions.width(20);
                 lineOptions.color(Color.BLUE);
+
+                /**Put all the markers into arraylist*/
+                //markersList.add(vBusRoute);
+                builder.include(vBusRoute);
             }
 
             // Drawing polyline in the Google Map for the i-th route
@@ -297,12 +331,32 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
             // get Mid-Point
             getMidPoint(sLat, sLon, eLat, eLon);
 
+        /**initialize the padding for map boundary*/
+        int padding = 50;
+        /**create the bounds from latlngBuilder to set into map camera*/
+        LatLngBounds bounds = builder.build();
+        /**create the camera with bounds and padding to set into map*/
+        cUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+        /**call the map call back to know map is loaded or not*/
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                /**set animated zoom camera into map*/
+                mMap.animateCamera(cUpdate);
+            }
+        });
+
+            // Display bus stops from AT Server
             new stopByTripId().execute();
-            //new realTimeVehicleLocations().execute();
         }
 
     } // shapeByTripId
 
+    /**
+     * Call AT api and retrieve bus stops of the selected route from Auckland Transport
+     * Show bus stops on the route
+     * @Param Trip ID Travel information of a selected bus number
+     */
     class stopByTripId extends AsyncTask<String, Void, Void> {
         ArrayList<Stop> tripStops = new ArrayList<>();
 
@@ -367,7 +421,6 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
                 findViewById(R.id.loadingPanel).setVisibility(View.GONE);
                 if(tripStops.size() == 0){
                     findViewById(R.id.map).setVisibility(View.INVISIBLE);
-                    //findViewById(R.id.errorMessageLayout).setVisibility(View.VISIBLE);
                 }
                 LatLng pTripStops = new LatLng(tripStops.get(i).getStop_Lat(), tripStops.get(i).getStop_Lon());
 
@@ -404,8 +457,14 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
     } // stopByTripId
 
+    /**
+     * Get middle point of whole markers to move on
+     * @param lat1 the latitude of starting point
+     * @param lon1 the longitude of starting point
+     * @param lat2 the latitude of ending point
+     * @param lon2 the longitude of ending point
+     */
     public void getMidPoint(double lat1, double lon1, double lat2, double lon2){
-
         double dLon = Math.toRadians(lon2 - lon1);
 
         //convert to radians
@@ -420,7 +479,7 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
 
         LatLng gMidLatLon = new LatLng(Math.toDegrees(lat3), Math.toDegrees(lon3));
         // Move to Mid-Point
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 10));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(gMidLatLon, 9));
     }
 
     /**
@@ -461,6 +520,9 @@ public class RouteActivity extends FragmentActivity implements OnMapReadyCallbac
         return fTripNo;
     }
 
+    /**
+     * Display error message onto the screen to notify to the user
+     */
     public void showErrMessage(){
         AlertDialog.Builder builder = new AlertDialog.Builder(RouteActivity.this, R.style.AppCompatAlertDialogStyle);
         builder.setTitle(R.string.error_title);

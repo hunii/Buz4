@@ -1,8 +1,5 @@
 package com.example.james.buz4;
 
-
-
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,13 +23,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-
+/**
+ * This class represent activity to send a feedback of the application to developer
+ * by using okhttp api, google form api and google spreadsheet api.
+ *
+ * Developed & updated by Jiwon Lee on 2016-10-15.
+ */
 public class FeedbackActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     public static final String TAG = "FeedbackActivity";
-    // EditText myFeedback = null;
-    ProgressDialog mDialog;
 
+    //The Feedback page get two inputs which are app user name and feedback content.
     private EditText mFeedback;
     private TextView nameInputField;
     final Context context = this;
@@ -44,15 +45,19 @@ public class FeedbackActivity extends AppCompatActivity implements NavigationVie
 
         initSlideBar();
 
+        //The page calls FeedbackSpreadsheetWebService interfaces and uses okhttp library.
         Retrofit retrofit = new Retrofit.Builder().baseUrl("https://docs.google.com/forms/d/e/").build();
         final FeedbackSpreadsheetWebService spreadsheetWebService = retrofit.create(FeedbackSpreadsheetWebService.class);
 
         mFeedback = (EditText)findViewById(R.id.feedback_content);
         nameInputField=(TextView)findViewById(R.id.feedback_name_input);
+
+        //Set onClickListener to the send button. The button makes editText, TextView to String and sends the strings to google form.
         findViewById(R.id.send_button).setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick(View v){
+                        findViewById(R.id.send_button).setEnabled(false);
                         String nameInput = nameInputField.getText().toString();
                         String feedMemo = mFeedback.getText().toString();
                         Call<Void> completeFeedbackCall = spreadsheetWebService.completeFeedback(nameInput,feedMemo);
@@ -179,15 +184,18 @@ public class FeedbackActivity extends AppCompatActivity implements NavigationVie
 
     private  final Callback<Void> callCallback = new Callback<Void>() {
         @Override
+        //The response of Callback, it shows alert dialog and reset the feedback content.
         public void onResponse(Response<Void> response) {
+
             Log.d("XXX","Submitted. "+response);
             AlertDialog.Builder builder = new AlertDialog.Builder(FeedbackActivity.this, R.style.AppCompatAlertDialogStyle);
             builder.setTitle(R.string.post_feedback_title);
             builder.setMessage(R.string.post_feedback_success);
-            builder.setPositiveButton(android.R.string.ok, null);
+            builder.setPositiveButton(android.R.string.ok,null);
             builder.show();
 
-
+            mFeedback.setText(null);
+            nameInputField.setText(null);
         }
 
         @Override
@@ -198,86 +206,7 @@ public class FeedbackActivity extends AppCompatActivity implements NavigationVie
             builder.setMessage(R.string.post_feedback_failed);
             builder.setPositiveButton(android.R.string.ok, null);
             builder.show();
+
         }
     };
-
-    /*
-    public void postFeedback(View v){
-        Calendar mCalendar = Calendar.getInstance();
-        int year = mCalendar.get(Calendar.YEAR);
-        int month = mCalendar.get(Calendar.MONTH);
-        int day = mCalendar.get(Calendar.DAY_OF_MONTH);
-        String timestamp = year+"-"+month+"-"+day;
-
-        String myfeedB = myFeedback.getText().toString();
-        (new HttpTask()).execute(String.valueOf(timestamp),myfeedB,null);
-
-    }
-
-
-    private class HttpTask extends AsyncTask<String, Void, Integer> {
-
-        @Override
-        protected void onPreExecute(){
-            super.onPreExecute();
-
-            mDialog = new ProgressDialog(FeedbackActivity.this);
-            mDialog.setIndeterminate(true);
-            mDialog.setMessage(getString(R.string.post_feedback_posting));
-            mDialog.setCanceledOnTouchOutside(false);
-            mDialog.show();
-        }
-
-        @Override
-        protected Integer doInBackground(String... params) {
-            try {
-                HttpPost postRequest = new HttpPost("https://script.google.com/macros/s/AKfycbwo21jUX7LUu34aXnDB8TVrl5giuJVM6MYRv_dCGtZNAVY0IM4k/exec");
-
-                Vector<NameValuePair> nameValue = new Vector<>();
-                nameValue.add(new BasicNameValuePair("sheet_name", "sheet1"));
-                nameValue.add(new BasicNameValuePair("timestamp", params[0]));
-                nameValue.add(new BasicNameValuePair("user_note", params[1]));
-               // nameValue.add(new BasicNameValuePair("deviceId", Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID)));
-
-                HttpEntity Entity = new UrlEncodedFormEntity(nameValue, "UTF-8");
-                postRequest.setEntity(Entity);
-
-
-                HttpClient mClient = HttpClientBuilder.create().build();
-                mClient.execute(postRequest);
-
-                return Integer.parseInt(params[0]);
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-            return -1;
-        }
-
-        protected void onPostExecute(Integer value){
-            super.onPostExecute(value);
-
-            if(mDialog != null){
-                mDialog.dismiss();
-                mDialog = null;
-            }
-
-            if(value==-1){
-                AlertDialog.Builder builder = new AlertDialog.Builder(FeedbackActivity.this, R.style.AppCompatAlertDialogStyle);
-                builder.setTitle(R.string.post_feedback_title);
-                builder.setMessage(R.string.post_feedback_failed);
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.show();
-            }else{
-                AlertDialog.Builder builder = new AlertDialog.Builder(FeedbackActivity.this, R.style.AppCompatAlertDialogStyle);
-                builder.setTitle(R.string.post_feedback_title);
-                builder.setMessage(R.string.post_feedback_success);
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.show();
-            }
-
-
-        }
-
-    }*/
-
 }

@@ -5,23 +5,23 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/mFavourites"
-            android:icon="@drawable/ic_menu_camera"
+            android:icon="@drawable/ic_menu_favourites"
             android:title="Favourites"/>
         <item
             android:id="@+id/mFindStop"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_menu_findstop"
             android:title="Find a stop"/>
         <item
             android:id="@+id/mViewRoutes"
-            android:icon="@drawable/ic_menu_slideshow"
+            android:icon="@drawable/ic_menu_route"
             android:title="View routes"/>
         <item
             android:id="@+id/mAtHop"
-            android:icon="@drawable/ic_menu_slideshow"
+            android:icon="@drawable/ic_menu_athop"
             android:title="Top-Up AT HOP"/>
         <item
             android:id="@+id/mFeedback"
-            android:icon="@drawable/ic_menu_share"
+            android:icon="@drawable/ic_menu_feedback"
             android:title="Feedback"/>
     </group>
 
@@ -29,7 +29,7 @@
         <menu>
             <item
                 android:id="@+id/mReference"
-                android:icon="@drawable/ic_menu_send"
+                android:icon="@drawable/ic_menu_reference"
                 android:title="References" />
         </menu>
     </item>

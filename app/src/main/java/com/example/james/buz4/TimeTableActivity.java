@@ -46,12 +46,12 @@ import model.TripStopAdapter;
  * Version Updated: 06 Oct 2016
  */
 
-public class TimeTableActivity extends AppCompatActivity
-        implements SwipeRefreshLayout.OnRefreshListener{
+public class TimeTableActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "TimeTableActivity";
     private String fileNameTrip = "at_bus_trips.txt";
     private String fileNameCalendar = "calendar.txt";
+    private String fileNameBusTime = "stop_times.txt";
     private InputStream iStream = null;
     private InputStreamReader iStreamReader = null;
     private BufferedReader buffReader = null;
@@ -67,13 +67,16 @@ public class TimeTableActivity extends AppCompatActivity
     private boolean favouriteOn;
 
     private FavouriteAdapter favAdap;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timetable);
 
         initSlideBar();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle("Stop No. "+getIntent().getSerializableExtra("busStopNo").toString());
+        getSupportActionBar().setSubtitle(getIntent().getSerializableExtra("busStopAddr").toString());
 
         listView = (ListView) findViewById(R.id.listview_tripstop);
         errorMessageLayout = (RelativeLayout)findViewById(R.id.errorMessageLayout);
@@ -113,6 +116,7 @@ public class TimeTableActivity extends AppCompatActivity
                 }
             });
         }
+
 
         //Log.w("Intent value checking: ",""+getIntent().getSerializableExtra("busStopNo").toString());
         new stopTimesByStopId().execute(getIntent().getSerializableExtra("busStopNo").toString());
@@ -209,7 +213,8 @@ public class TimeTableActivity extends AppCompatActivity
     public class stopTimesByStopId extends AsyncTask<String, Void, Void> {
         ArrayList<TripStop> tStopList = new ArrayList<TripStop>();
         HashMap<String, ServiceCalendar> serviceHash = new HashMap<String, ServiceCalendar>();
-
+        long timingStart;
+        long timingFinish;
         @Override
         protected void onPreExecute(){}
         /**
@@ -220,8 +225,11 @@ public class TimeTableActivity extends AppCompatActivity
         @Override
         protected Void doInBackground(String... params) {
             String JsonString;
-            Log.w(TAG, "----------------BUS WEEKLY ROSTER UPDATE");
+            timingStart = System.currentTimeMillis();
+            Log.w(TAG, "----------------BUS WEEKLY ROSTER UPDATE: "+timingStart);
             try {
+
+                int currentTimeinMilli = getCurrentTime();
 
                 //Bus weekly service update
                 iStream = getResources().getAssets().open(fileNameCalendar);
@@ -259,7 +267,7 @@ public class TimeTableActivity extends AppCompatActivity
                 //Get the instance of JSONArray that contains JSONObjects
                 JSONArray jsonArray = jsonRootObject.optJSONArray("response");
 
-                int currentTimeinMilli = getCurrentTime();
+
                 //Iterate the jsonArray and print the info of JSONObjects
                 for(int i=0; i < jsonArray.length(); i++) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -308,6 +316,7 @@ public class TimeTableActivity extends AppCompatActivity
                         }
                     }
                 }
+                //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 Collections.sort(tStopList);
             }catch(Exception e){Log.w(TAG, "-------------------no network---------------"+e+e.getCause());}
             return null;
@@ -319,6 +328,8 @@ public class TimeTableActivity extends AppCompatActivity
          */
         @Override
         protected void onPostExecute(Void v) {
+            timingFinish = System.currentTimeMillis();
+            Log.w(TAG, "Finishing the first job: @"+timingFinish+" it took "+(timingFinish-timingStart));
             new readTripTxt().execute(tStopList);
         }
     }
@@ -331,8 +342,8 @@ public class TimeTableActivity extends AppCompatActivity
         HashMap<String,Trip> findTripInfo = new HashMap<String, Trip>();
         ArrayList<TripStop> tStopList2 = new ArrayList<TripStop>();
         ArrayList<Trip> tripList = new ArrayList<Trip>();
-        ArrayList<String> tripInfo = new ArrayList<>();
-
+        long timingStart;
+        long timingFinish;
 
         @Override
         protected void onPreExecute(){}
@@ -345,7 +356,8 @@ public class TimeTableActivity extends AppCompatActivity
         @Override
         protected Void doInBackground(ArrayList<TripStop>... params) {
             tStopList2 = params[0];
-
+            timingStart = System.currentTimeMillis();
+            Log.w(TAG, "Start the second JOB"+timingStart);
             try {
                 iStream = getResources().getAssets().open(fileNameTrip);
                 iStreamReader = new InputStreamReader(iStream);
@@ -380,6 +392,8 @@ public class TimeTableActivity extends AppCompatActivity
          */
         @Override
         protected void onPostExecute(Void v){
+            timingFinish = System.currentTimeMillis();
+            Log.w(TAG, "Finishing the first job: @"+timingFinish+" it took "+(timingFinish-timingStart));
             CurrentListOfTimes = tStopList2;
             findViewById(R.id.loadingPanel).setVisibility(View.GONE);
             //Inject list data into list view
@@ -402,7 +416,6 @@ public class TimeTableActivity extends AppCompatActivity
             }
         }
     }
-
 
     public void setErrorMsg(){
         swipeContainer.setVisibility(View.GONE);

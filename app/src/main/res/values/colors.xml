@@ -4,4 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="myColor">#ccff00</color>
+    <color name="appBackground">#ffffff</color>
+    <color name="toolbarBackground">#e9eff5</color>
+    <color name="toolbarFont">#010101</color>
 </resources>

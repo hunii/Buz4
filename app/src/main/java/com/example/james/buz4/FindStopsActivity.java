@@ -1,9 +1,5 @@
 package com.example.james.buz4;
 
-/**
- * Created by Taehyun Kim on 09/08/2016.
- */
-
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -29,6 +25,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -45,6 +42,13 @@ import java.util.ArrayList;
 
 import model.Stop;
 
+/**
+ * This class represent activity to show the bus stops near by user's current location.
+ *
+ * Developed by Taehyun Kim
+ * Created on 09/08/2016.
+ * Modified version 0.9.0 on 18/oct/2016 (Using text file due to AT web problem)
+ */
 public class FindStopsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -54,6 +58,7 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
     public double curLat, curLog;
     int sDistance = 300;
     public static final String TAG = "FindStopsActivity";
+    private String fileNameStops = "at_bus_stops.txt";
 
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
@@ -62,6 +67,15 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
     public LocationManager mLocationManager;
     final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
 
+    private InputStream iStream = null;
+    private InputStreamReader iStreamReader = null;
+    private BufferedReader buffReader = null;
+    public String search_type, tripId;
+
+    /**
+     * Init map fragment connected to xmp file.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +89,10 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         handlePermissionsAndGetLocation();
     }
 
+    /**
+     * load current location and enable location button
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -89,6 +107,11 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPoint, 17));
     }
 
+    /**
+     * Enable infomation window on the bus stop
+     * @param marker
+     * @return busStopNo, busStopAddress to timeTableActivity
+     */
     @Override
     public void onInfoWindowClick (Marker marker) {
         marker.showInfoWindow();
@@ -133,6 +156,9 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
+    /**
+     * init location listener to retrieve current location
+     */
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
@@ -157,9 +183,13 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         }
     };
 
+    /**
+     * init menu bar
+     * @param menu
+     * @return selected menu
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        //Log.w(TAG, "====================onCreateOptionsMenu===================");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         return true;
@@ -204,6 +234,10 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         }
     }
 
+    /**
+     * get current screen position
+     * @param cameraPosition
+     */
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
         if(mMap.getCameraPosition().zoom > 15.5) {
@@ -211,12 +245,21 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
             curLog = mMap.getCameraPosition().target.longitude;
 
             // Connect AT API and retrieve bus stops
-            new stopsSearchByPosition().execute();
+            //new stopsSearchByPosition().execute();
+
+            // Read AT bus stops text file
+            new stopsByTripIdFromText().execute();
         }else{
             mMap.clear();
         }
     }
 
+    /**
+     * Call Auckland Transport API
+     * Receive and display bus stops around current location on Google map
+     * (**Since 17/Oct/2016, this api is not provided from AT web
+     * Changed this method to stopsByTripIdFromText)
+     */
     class stopsSearchByPosition extends AsyncTask<String, Void, Void> {
         ArrayList<Stop> listStop = new ArrayList<>();
 
@@ -289,5 +332,79 @@ public class FindStopsActivity extends FragmentActivity implements OnMapReadyCal
         }
 
     } // class
+
+    /**
+     * Read and display bus stops from text file provided Auckland Transport
+     * Use AT bus stop text file
+     * @Param Trip ID Travel information of a selected bus number
+     */
+    public class stopsByTripIdFromText extends AsyncTask<String, Void, Void> {
+        ArrayList<Stop> listStop = new ArrayList<>();
+
+        @Override
+        protected void onPreExecute(){}
+
+        /**
+         * Bufferreading bus stop file to get all bus stops location around current location
+         */
+        @Override
+        protected Void doInBackground(String... params) {
+
+            try {
+                iStream = getResources().getAssets().open(fileNameStops);
+                iStreamReader = new InputStreamReader(iStream);
+                buffReader = new BufferedReader(iStreamReader);
+                String rLine;
+
+                while ((rLine = buffReader.readLine()) != null) {
+                    try {
+                        String[] lines = rLine.split(",");
+                        double stop_lat = Double.parseDouble(lines[0]);
+                        double stop_lon = Double.parseDouble(lines[2]);
+                        int stop_no = Integer.parseInt(lines[3]);
+                        String stop_name = lines[6];
+
+                        if(1000 < stop_no && stop_no < 10000) {
+                            Stop aStop = new Stop(stop_no, stop_name, stop_lat, stop_lon);
+                            listStop.add(aStop);
+                            publishProgress();
+                        }
+                    }catch(NumberFormatException nfe){
+                        Log.w(TAG, nfe);
+                    }
+                }
+                buffReader.close();
+
+            }catch(Exception e){e.getCause();}
+            return null;
+        }
+
+        /**
+         * Push completed list of Trip objects to the view(XML) adapter to output a list of Trip object accordingly.
+         */
+        @Override
+        protected void onPostExecute(Void v){
+            // Add bus stops
+            if (mMap != null) {
+                //This is the current user-viewable region of the map
+                LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+
+                for (int i = 0; i < listStop.size(); i++) {
+                    LatLng vBusStops = new LatLng(listStop.get(i).getStop_Lat(), listStop.get(i).getStop_Lon());
+
+                    if(bounds.contains(new LatLng(listStop.get(i).getStop_Lat(), listStop.get(i).getStop_Lon()))) {
+                        mMap.addMarker(new MarkerOptions()
+                                .title(Integer.toString(listStop.get(i).getStop_Id()))
+                                .snippet(listStop.get(i).getStop_Name())
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                                //.icon(BitmapDescriptorFactory.fromResource(R.drawable.at_bus_stop_2))
+                                .position(vBusStops));
+                    }
+
+                } // for
+            }
+            findViewById(R.id.loadingPanel).setVisibility(View.GONE);
+        }
+    } // stopsByTripIdFromText ends
 
 }

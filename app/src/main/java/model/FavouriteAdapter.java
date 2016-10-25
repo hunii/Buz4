@@ -1,7 +1,6 @@
 package model;
 
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +10,14 @@ import android.widget.TextView;
 import com.example.james.buz4.R;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 /**
- * Created by James on 10/10/2016.
+ * Developed by Hyeonwoo Kang
+ * Version updated : 19/10/2016.
  */
 public class FavouriteAdapter extends BaseAdapter {
     private Context context;
@@ -32,6 +29,7 @@ public class FavouriteAdapter extends BaseAdapter {
         mFavouriteList = new ArrayList<Favourite>();
     }
 
+    //To refresh the list
     public boolean fetchNewFavouriteList(){
         ArrayList<Favourite> oldList = mFavouriteList;
         mFavouriteList = new ArrayList<Favourite>();
@@ -77,6 +75,7 @@ public class FavouriteAdapter extends BaseAdapter {
         return false;
     }
 
+    //To add favorite bus stop in the favorite list
     public boolean addFavourite(String busNo){
         try{
             if(busNo == null || !busNo.isEmpty()) {
@@ -105,6 +104,7 @@ public class FavouriteAdapter extends BaseAdapter {
         return true;
     }
 
+    //To personalize the favorited bus stop
     public boolean editFavourite(String newTitle, String busNo){
         try {
             //Read file and EDIT busNO
@@ -137,6 +137,7 @@ public class FavouriteAdapter extends BaseAdapter {
         return true;
     }
 
+    //To remove favorited item from the favorite list
     public boolean deleteFavourite(String busNo){
 
         try {

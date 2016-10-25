@@ -34,7 +34,9 @@ import model.Favourite;
 import model.FavouriteAdapter;
 
 /**
- * Created by Joshua Kim on 9/09/2016.
+ * This class shows the activity of setting up favorite list on the main page.
+ * Developed by Hyeonwoo Kang
+ * Version updated: 19/10/2016
  */
 public class FavouriteActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -53,7 +55,7 @@ public class FavouriteActivity extends AppCompatActivity
         setContentView(R.layout.activity_favourite);
 
         initSlideBar();
-
+        //search for the bus
         searchText = (EditText) findViewById(R.id.searchText);
         searchButton = (Button) findViewById(R.id.searchButton);
 
@@ -192,6 +194,7 @@ public class FavouriteActivity extends AppCompatActivity
         alertDialog.show();
     }
 
+    //button for search
     public void searchButtonOnClick(View V){
 
         Intent intent = new Intent(FavouriteActivity.this, TimeTableActivity.class); // Bus stop list
@@ -209,7 +212,7 @@ public class FavouriteActivity extends AppCompatActivity
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-
+    //to create thread to update favorite list view
     public class favouriteFetch extends AsyncTask<String, Void, Void> {
 
         ArrayList<Favourite> listFav = new ArrayList<Favourite>();
